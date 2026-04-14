@@ -11,11 +11,11 @@ import { generateMagicLink } from '../lib/magicLink.js'
 const isDev = import.meta.env.DEV
 
 const FALLBACK_BAULEITER = [
-  { id: 'celik', name: 'Ümit Celik', email: 'celik@bau4you.at', isFallback: true },
-  { id: 'lucic', name: 'Dijan Lucic', email: 'lucic@bau4you.at', isFallback: true },
+  { id: 'celik', name: 'Ümit Celik', email: 'info@napetschnig.at', isFallback: true },
+  { id: 'lucic', name: 'Dijan Lucic', email: 'info@napetschnig.at', isFallback: true },
 ]
 
-const LUKASZ_ENTRY = { id: 'lukasz', name: 'Lukasz Baranowski', email: 'ipad@bau4you.at', isFallback: true }
+const LUKASZ_ENTRY = { id: 'lukasz', name: 'Christoph Napetschnig', email: 'napetschnig.chris@gmail.com', isFallback: true }
 
 // Circular progress SVG
 function CircularProgress({ percent }) {
@@ -27,7 +27,7 @@ function CircularProgress({ percent }) {
       <circle cx="48" cy="48" r={R} fill="none" stroke="#e5e7eb" strokeWidth="8" />
       <circle
         cx="48" cy="48" r={R} fill="none"
-        stroke="#CC0000" strokeWidth="8"
+        stroke="#3a3a3a" strokeWidth="8"
         strokeLinecap="round"
         strokeDasharray={CIRC}
         strokeDashoffset={offset}

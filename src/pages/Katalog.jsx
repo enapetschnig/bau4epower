@@ -344,7 +344,7 @@ export default function Katalog({ embedded = false }) {
             {/* Print-only page header (repeats on every page via position:fixed) */}
             <div className="print-page-header hidden">
               <div>
-                <span style={{ color: '#c0392b', fontWeight: 800, fontSize: '13px', letterSpacing: '0.05em' }}>BAU4YOU</span>
+                <span style={{ color: '#3a3a3a', fontWeight: 800, fontSize: '13px', letterSpacing: '0.05em' }}>NAPETSCHNIG.</span>
                 <span style={{ color: '#2c3e50', fontWeight: 700, fontSize: '13px' }}> Preisliste</span>
                 {activeVersion?.name && (
                   <span style={{ color: '#6b7280', fontSize: '10px', marginLeft: '6px' }}>— {activeVersion.name}</span>
@@ -364,9 +364,9 @@ export default function Katalog({ embedded = false }) {
 
                   {/* Gewerk heading */}
                   <div className="print-gewerk-heading rounded-t-xl mb-0 px-3 py-1 font-bold text-sm"
-                    style={{ background: '#fef2f2', color: '#c0392b', borderBottom: '2px solid #c0392b' }}>
+                    style={{ background: '#f5f5f5', color: '#3a3a3a', borderBottom: '2px solid #3a3a3a' }}>
                     {gewerkName}
-                    <span className="ml-2 font-normal text-xs" style={{ color: '#c0392b', opacity: 0.7 }}>({items.length} Pos.)</span>
+                    <span className="ml-2 font-normal text-xs" style={{ color: '#3a3a3a', opacity: 0.7 }}>({items.length} Pos.)</span>
                   </div>
 
                   {/* KURZ VIEW */}

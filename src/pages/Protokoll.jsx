@@ -14,10 +14,10 @@ import { buildProtokollHtml } from '../lib/emailHtml.js'
 import { supabase, getEdgeFunctionHeaders } from '../lib/supabase.js'
 
 const FALLBACK_BAULEITER = [
-  { id: 'celik', name: 'Ümit Celik', email: 'celik@bau4you.at', isFallback: true },
-  { id: 'lucic', name: 'Dijan Lucic', email: 'lucic@bau4you.at', isFallback: true },
+  { id: 'celik', name: 'Ümit Celik', email: 'info@napetschnig.at', isFallback: true },
+  { id: 'lucic', name: 'Dijan Lucic', email: 'info@napetschnig.at', isFallback: true },
 ]
-const LUKASZ_ENTRY = { id: 'lukasz', name: 'Lukasz Baranowski', email: 'ipad@bau4you.at', isFallback: true }
+const LUKASZ_ENTRY = { id: 'lukasz', name: 'Christoph Napetschnig', email: 'napetschnig.chris@gmail.com', isFallback: true }
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY

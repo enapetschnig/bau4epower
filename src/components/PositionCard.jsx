@@ -23,7 +23,7 @@ export default function PositionCard({ position, onDelete, showDeleteButton = fa
 
   return (
     <div id={positionId} className="card" style={{
-      border: isUnsicher ? '3px solid #e74c3c' : '2px solid #c0392b',
+      border: isUnsicher ? '3px solid #e74c3c' : '2px solid #3a3a3a',
       borderRadius: '12px',
       ...(isUnsicher ? { animation: 'unsicherBorder 1.5s ease-in-out infinite alternate', backgroundColor: '#fef2f2' } : {}),
     }}>

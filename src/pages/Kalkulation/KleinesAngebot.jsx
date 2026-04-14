@@ -315,10 +315,10 @@ export default function KleinesAngebot({ loadOfferId = null }) {
   useEffect(() => {
     if (loadOfferId) return // Will be loaded from DB instead
     try {
-      const nachtragRaw = sessionStorage.getItem('bau4you_nachtrag')
+      const nachtragRaw = sessionStorage.getItem('napetschnig_nachtrag')
       console.log('[Nachtrag KA] sessionStorage raw:', nachtragRaw)
       if (nachtragRaw) {
-        sessionStorage.removeItem('bau4you_nachtrag')
+        sessionStorage.removeItem('napetschnig_nachtrag')
         try {
           const { projektnummer: pn, adresse: nadr, inputText: it } = JSON.parse(nachtragRaw)
           console.log('[Nachtrag KA] Geladen:', { pn, nadr, it })
@@ -1112,7 +1112,7 @@ export default function KleinesAngebot({ loadOfferId = null }) {
                     ergaenzungen,
                     hinweise,
                     nachlass,
-                    userName: profile?.name || user?.email || 'Lukasz Baranowski',
+                    userName: profile?.name || user?.email || 'Christoph Napetschnig',
                     userEmail: profile?.email || user?.email || '',
                     datum,
                   })

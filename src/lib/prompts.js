@@ -6,7 +6,7 @@ const STUNDENSAETZE_PLACEHOLDER = '{{STUNDENSAETZE}}'
 const AUFSCHLAG_GESAMT_PLACEHOLDER = '{{AUFSCHLAG_GESAMT}}'
 const AUFSCHLAG_MATERIAL_PLACEHOLDER = '{{AUFSCHLAG_MATERIAL}}'
 
-export const DEFAULT_PROMPT_1 = `Du bist Kalkulator für BAU4YOU Baranowski Bau GmbH Wien. Kalkuliere EINE einzelne Bauposition.
+export const DEFAULT_PROMPT_1 = `Du bist Kalkulator für NAPETSCHNIG. Wien. Kalkuliere EINE einzelne Bauposition.
 
 STUNDENSÄTZE:
 ${STUNDENSAETZE_PLACEHOLDER}
@@ -87,7 +87,7 @@ RICHTIG: Ein JSON-Objekt das alle Arbeitsschritte kombiniert
 
 {"leistungsnummer":"07-NEU","leistungsname":"Dippelbaumdecke sanieren – Liapor, Spannplatte, Schwarzdeckung","beschreibung":"Fachgerechte Sanierung der Dippelbaumdecke durch Verfüllen der Hohlräume mit Liapor-Blähtonkugeln (Körnung 4-8 mm) zur Schall- und Wärmedämmung. Anschließend Verschrauben von Verlegespanplatten (mind. 22 mm, P5 feuchtebeständig) auf den Deckenbalken. Abschließend Aufbringen einer zweilagigen Schwarzdeckung (Bitumenbahn R500 nach ÖNORM B 3661) als Feuchtigkeitssperre; alle Stöße fachgerecht verklebt und abgedichtet.","menge":1,"einheit":"m²","vk_netto_einheit":145.00,"gesamtpreis":145.00,"materialkosten_einheit":65.00,"materialanteil_prozent":44.8,"lohnkosten_minuten":90,"stundensatz":70,"lohnkosten_einheit":105.00,"lohnanteil_prozent":55.2,"gewerk":"Baumeister"}`
 
-export const DEFAULT_PROMPT_2 = `Du bist ein erfahrener Kalkulator für die Baufirma BAU4YOU Baranowski Bau GmbH in Wien.
+export const DEFAULT_PROMPT_2 = `Du bist ein erfahrener Kalkulator für die Baufirma NAPETSCHNIG. in Wien.
 
 AUFGABE: Erstelle ein vollständiges Angebot basierend auf der Beschreibung des Bauleiters.
 
@@ -630,7 +630,7 @@ AUSGABE: Antworte NUR mit einem JSON-Objekt:
  * Minimaler Prompt für handleAddPosition – nur das Nötigste.
  * ~500 Tokens statt ~3.200 (DEFAULT_PROMPT_1) → deutlich schneller.
  */
-export const PROMPT_ADD_POSITION = `Du bist Kalkulator für BAU4YOU Wien. Gib NUR eine einzelne Bauposition als JSON zurück.
+export const PROMPT_ADD_POSITION = `Du bist Kalkulator für NAPETSCHNIG. Wien. Gib NUR eine einzelne Bauposition als JSON zurück.
 
 STUNDENSÄTZE:
 ${STUNDENSAETZE_PLACEHOLDER}
@@ -694,7 +694,7 @@ export function buildPrompt(basePrompt, stundensaetze, settings = {}) {
   return prompt.replace(STUNDENSAETZE_PLACEHOLDER, lines)
 }
 
-export const DEFAULT_PROMPT_EDIT_REKALKULATION = `Du bist ein erfahrener Kalkulator für die Baufirma BAU4YOU Baranowski Bau GmbH in Wien.
+export const DEFAULT_PROMPT_EDIT_REKALKULATION = `Du bist ein erfahrener Kalkulator für die Baufirma NAPETSCHNIG. in Wien.
 
 AUFGABE: Kalkuliere eine Bauposition KOMPLETT NEU auf Basis der folgenden Beschreibung.
 Ignoriere alle eventuell vorhandenen früheren Preise oder Werte vollständig. Leite ALLE Werte (leistungsname, beschreibung, einheit, lohnkosten_minuten, alle Kosten) ausschließlich aus der neuen Beschreibung ab.
@@ -765,7 +765,7 @@ AUSGABE: Antworte NUR mit einem JSON-Objekt (kein Markdown, kein Text davor/dana
   "hinweis": ""
 }`
 
-export const DEFAULT_PROMPT_EDIT_OFFER = `Du bist ein erfahrener Kalkulator für die Baufirma BAU4YOU Baranowski Bau GmbH in Wien.
+export const DEFAULT_PROMPT_EDIT_OFFER = `Du bist ein erfahrener Kalkulator für die Baufirma NAPETSCHNIG. in Wien.
 
 AUFGABE: Bearbeite ein bestehendes Angebot gemäß der Änderungsanweisung des Bauleiters.
 Übernimm alle Gewerke und Positionen unverändert und ändere NUR das explizit Genannte.
@@ -773,7 +773,7 @@ Berechne alle abhängigen Werte neu: gesamtpreis = menge × vk_netto_einheit, zw
 
 AUSGABE: Antworte NUR mit dem vollständigen aktualisierten JSON-Objekt im gleichen Format wie das Eingabe-Angebot (kein Markdown, kein Text davor/danach).`
 
-export const DEFAULT_PROMPT_EDIT_GEWERK = `Du bist ein erfahrener Kalkulator für die Baufirma BAU4YOU Baranowski Bau GmbH in Wien.
+export const DEFAULT_PROMPT_EDIT_GEWERK = `Du bist ein erfahrener Kalkulator für die Baufirma NAPETSCHNIG. in Wien.
 
 AUFGABE: Bearbeite einen einzelnen Gewerk-Block gemäß der Änderungsanweisung. Übernimm alle Positionen unverändert und ändere NUR das explizit Genannte. Du kannst Positionen hinzufügen, löschen oder ändern.
 Bei jeder neuen oder geänderten Position gilt STRIKT:
@@ -788,7 +788,7 @@ Berechne zwischensumme = Summe aller gesamtpreis der Positionen im Block.
 AUSGABE: Antworte NUR mit dem aktualisierten JSON-Objekt: { "name": "...", "positionen": [...], "zwischensumme": 0.00 } (kein Markdown, kein Text davor/danach).`
 
 // ─── Typ 2: Aufgliederung ─────────────────────────────────────────────────────
-export const DEFAULT_PROMPT_AUFGLIEDERUNG = `Du bist ein erfahrener Bauleiter bei BAU4YOU Baranowski Bau GmbH in Wien.
+export const DEFAULT_PROMPT_AUFGLIEDERUNG = `Du bist ein erfahrener Bauleiter bei NAPETSCHNIG. in Wien.
 
 AUFGABE: Analysiere die folgende Spracheingabe und erstelle eine strukturierte Aufgliederung aller genannten Bauleistungen als Punkt-Liste.
 

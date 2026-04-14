@@ -46,7 +46,7 @@ export default function Login() {
                 className="input-field"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="name@bau4you.at"
+                placeholder="name@napetschnig.at"
                 required
                 autoComplete="email"
               />
@@ -83,7 +83,7 @@ export default function Login() {
         </div>
 
         <p className="text-center text-xs text-gray-400">
-          BAU4YOU Baranowski Bau GmbH · Wien
+          NAPETSCHNIG. · Wien
         </p>
       </div>
     </div>

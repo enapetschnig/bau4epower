@@ -3,23 +3,23 @@ import autoTable from 'jspdf-autotable'
 
 // ── Unternehmensinfos ────────────────────────────────────────────────────────
 const COMPANY = {
-  name: 'Baranowski Bau GmbH',
-  brand: 'BAU4YOU',
-  street: 'Hyegasse 3 / Lokal B',
-  city: '1030 Wien',
-  plz: '296600b Wien',
-  gf: 'Lukasz Baranowski',
-  steuernr: '382375756',
-  uid: 'ATU63544828',
-  iban: 'AT62 1400 0042 1083 2292',
-  bic: 'BAWAATWW',
-  bank: 'BAWAG PSK',
-  mobil: '+436645056387',
-  email: 'baranowski@bau4you.at',
+  name: 'NAPETSCHNIG.',
+  brand: 'NAPETSCHNIG.',
+  street: '',
+  city: 'Wien',
+  plz: 'Wien',
+  gf: 'Christoph Napetschnig',
+  steuernr: '',
+  uid: '',
+  iban: '',
+  bic: '',
+  bank: '',
+  mobil: '',
+  email: 'napetschnig.chris@gmail.com',
 }
 
-const COLOR_PRIMARY = [192, 57, 43]   // #c0392b
-const COLOR_DARK    = [44, 62, 80]    // #2c3e50
+const COLOR_PRIMARY = [58, 58, 58]    // #3a3a3a
+const COLOR_DARK    = [26, 26, 26]    // #1a1a1a
 const COLOR_GRAY    = [120, 120, 120]
 const COLOR_LIGHT   = [240, 240, 240]
 const COLOR_WHITE   = [255, 255, 255]
@@ -322,10 +322,10 @@ export async function generateAngebotPdf({
   y += LINE_H * 3
 
   doc.setFont('helvetica', 'bold')
-  doc.text('Lukasz Baranowski', ML, y)
+  doc.text('Christoph Napetschnig', ML, y)
   y += LINE_H + 1
   doc.setFont('helvetica', 'normal')
-  doc.text('Geschäftsführer / BAU4YOU Baranowski Bau GmbH', ML, y)
+  doc.text('Geschäftsführer / NAPETSCHNIG.', ML, y)
 
   // ── Footer auf allen Seiten ──
   const totalPages = doc.internal.getNumberOfPages()
@@ -363,7 +363,7 @@ function drawAngebotHeader(doc, ctx, isFirstPage) {
   const infoRows = [
     ['Projektnummer', projektnummer || '–'],
     ['Datum', datum || '–'],
-    ['Ansprechpartner', userName || 'Lukasz Baranowski'],
+    ['Ansprechpartner', userName || 'Christoph Napetschnig'],
     ['Mobil', COMPANY.mobil],
     ['E-Mail', COMPANY.email],
   ]
@@ -420,7 +420,7 @@ function drawProtoHeader(doc, { logo, projektnummer, datum, userName, userEmail,
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(8.5)
   doc.setTextColor(...COLOR_DARK)
-  doc.text('BAU4YOU Baranowski Bau GmbH', pageW - 15, 31, { align: 'right' })
+  doc.text('NAPETSCHNIG.', pageW - 15, 31, { align: 'right' })
 
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(7.5)
@@ -457,7 +457,7 @@ function drawProtoFooter(doc, pageNum, totalPages) {
   doc.setFontSize(6.5)
   doc.setTextColor(...COLOR_GRAY)
   const cx = pageW / 2
-  doc.text(`BAU4YOU Baranowski Bau GmbH | ${COMPANY.street} | ${COMPANY.city} | Geschäftsführer: ${COMPANY.gf}`, cx, fy + 5, { align: 'center' })
+  doc.text(`NAPETSCHNIG. | ${COMPANY.city} | Geschäftsführer: ${COMPANY.gf}`, cx, fy + 5, { align: 'center' })
   doc.text(`Steuernummer: ${COMPANY.steuernr} | USt-IdNr.: ${COMPANY.uid}`, cx, fy + 10, { align: 'center' })
   doc.text(`${COMPANY.bank} | IBAN: ${COMPANY.iban} | BIC: ${COMPANY.bic}`, cx, fy + 15, { align: 'center' })
   doc.setFontSize(7)

@@ -21,11 +21,7 @@ function ProtectedRoutes() {
       <div className="min-h-screen flex items-center justify-center bg-gray-light">
         <div className="flex flex-col items-center gap-4">
           <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center">
-            <svg width="32" height="32" viewBox="0 0 64 64" fill="none">
-              <rect x="8" y="28" width="48" height="32" rx="2" fill="white"/>
-              <polygon points="4,30 32,6 60,30" fill="white" opacity="0.7"/>
-              <text x="32" y="52" textAnchor="middle" fill="#c0392b" fontSize="22" fontWeight="800" fontFamily="Inter">4</text>
-            </svg>
+            <span className="text-white text-2xl font-extrabold" style={{ fontFamily: 'Georgia, serif' }}>N.</span>
           </div>
           <p className="text-gray-400 text-sm">Laden...</p>
         </div>

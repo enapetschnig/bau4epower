@@ -41,8 +41,8 @@ export function buildProtokollHtml({ betrifft, adresse, projektnummer, protokoll
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f6f8;padding:24px 0;">
   <tr><td align="center">
     <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-      <tr><td style="background:#c0392b;padding:24px 32px;">
-        <div style="font-size:22px;font-weight:bold;color:#ffffff;letter-spacing:0.5px;">BAU4YOU – Besprechungsprotokoll</div>
+      <tr><td style="background:#3a3a3a;padding:24px 32px;">
+        <div style="font-size:22px;font-weight:bold;color:#ffffff;letter-spacing:0.5px;">NAPETSCHNIG. –Besprechungsprotokoll</div>
         <div style="font-size:13px;color:#f8d7d7;margin-top:4px;">${escapeHtml(betrifft) || 'Protokoll'}</div>
       </td></tr>
       <tr><td style="padding:24px 32px 16px;">
@@ -56,8 +56,8 @@ export function buildProtokollHtml({ betrifft, adresse, projektnummer, protokoll
       </td></tr>
       ${zusatzPunkte.length > 0 ? `
       <tr><td style="padding:0 32px 16px;">
-        <div style="background:#fff7ed;border-left:4px solid #c0392b;padding:12px 16px;border-radius:0 6px 6px 0;">
-          <div style="font-size:14px;font-weight:700;color:#c0392b;margin-bottom:6px;">⚡ ${zusatzPunkte.length} Zusatzleistung${zusatzPunkte.length !== 1 ? 'en' : ''} erkannt</div>
+        <div style="background:#fff7ed;border-left:4px solid #3a3a3a;padding:12px 16px;border-radius:0 6px 6px 0;">
+          <div style="font-size:14px;font-weight:700;color:#3a3a3a;margin-bottom:6px;">⚡ ${zusatzPunkte.length} Zusatzleistung${zusatzPunkte.length !== 1 ? 'en' : ''} erkannt</div>
           <ul style="margin:0;padding-left:18px;color:#7f1d1d;font-size:13px;line-height:1.8;">
             ${zusatzPunkte.map(p => `<li><strong>${escapeHtml(p.thema)}</strong> – ${escapeHtml(p.beschreibung)}</li>`).join('')}
           </ul>
@@ -87,13 +87,13 @@ export function buildProtokollHtml({ betrifft, adresse, projektnummer, protokoll
         </div>
       </td></tr>` : ''}
       <tr><td style="padding:0 32px 32px;text-align:center;">
-        <a href="${protokollLink}" style="display:inline-block;background:#c0392b;color:#ffffff;font-size:15px;font-weight:700;padding:14px 32px;border-radius:8px;text-decoration:none;letter-spacing:0.3px;">
+        <a href="${protokollLink}" style="display:inline-block;background:#3a3a3a;color:#ffffff;font-size:15px;font-weight:700;padding:14px 32px;border-radius:8px;text-decoration:none;letter-spacing:0.3px;">
           Protokoll öffnen
         </a>
       </td></tr>
       <tr><td style="background:#f5f6f8;padding:16px 32px;border-top:1px solid #e5e7eb;">
         <div style="font-size:11px;color:#9ca3af;text-align:center;">
-          BAU4YOU Baranowski Bau GmbH &nbsp;|&nbsp; Automatisch generiert am ${datum} um ${uhrzeit} Uhr
+          NAPETSCHNIG. &nbsp;|&nbsp; Automatisch generiert am ${datum} um ${uhrzeit} Uhr
         </div>
       </td></tr>
     </table>
@@ -137,8 +137,8 @@ export function buildAngebotHtml({ betrifft, adresse, projektnummer, gewerke, ne
     <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
 
       <!-- Header -->
-      <tr><td style="background:#c0392b;padding:24px 32px;">
-        <div style="font-size:22px;font-weight:bold;color:#ffffff;letter-spacing:0.5px;">BAU4YOU – Neues Angebot</div>
+      <tr><td style="background:#3a3a3a;padding:24px 32px;">
+        <div style="font-size:22px;font-weight:bold;color:#ffffff;letter-spacing:0.5px;">NAPETSCHNIG. –Neues Angebot</div>
         <div style="font-size:13px;color:#f8d7d7;margin-top:4px;">Zur Übertragung in Hero bereit</div>
       </td></tr>
 
@@ -197,9 +197,9 @@ export function buildAngebotHtml({ betrifft, adresse, projektnummer, gewerke, ne
         <div style="font-size:15px;font-weight:700;color:#2c3e50;margin-bottom:10px;">Gewerke</div>
         <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;">
           <tr style="background:#f5f6f8;">
-            <th style="padding:9px 10px;text-align:left;font-size:12px;color:#6b7280;font-weight:600;border-bottom:2px solid #c0392b;">Gewerk</th>
-            <th style="padding:9px 10px;text-align:center;font-size:12px;color:#6b7280;font-weight:600;border-bottom:2px solid #c0392b;">Pos.</th>
-            <th style="padding:9px 10px;text-align:right;font-size:12px;color:#6b7280;font-weight:600;border-bottom:2px solid #c0392b;">Summe netto</th>
+            <th style="padding:9px 10px;text-align:left;font-size:12px;color:#6b7280;font-weight:600;border-bottom:2px solid #3a3a3a;">Gewerk</th>
+            <th style="padding:9px 10px;text-align:center;font-size:12px;color:#6b7280;font-weight:600;border-bottom:2px solid #3a3a3a;">Pos.</th>
+            <th style="padding:9px 10px;text-align:right;font-size:12px;color:#6b7280;font-weight:600;border-bottom:2px solid #3a3a3a;">Summe netto</th>
           </tr>
           ${gewerkeRows}
         </table>
@@ -218,7 +218,7 @@ export function buildAngebotHtml({ betrifft, adresse, projektnummer, gewerke, ne
           </tr>
           <tr style="border-top:1px solid #e5e7eb;">
             <td style="padding:10px 0;font-size:16px;font-weight:800;color:#2c3e50;">Brutto gesamt</td>
-            <td style="padding:10px 0;font-size:18px;font-weight:800;text-align:right;color:#c0392b;">${fmt(brutto)} €</td>
+            <td style="padding:10px 0;font-size:18px;font-weight:800;text-align:right;color:#3a3a3a;">${fmt(brutto)} €</td>
           </tr>
         </table>
       </td></tr>
@@ -226,7 +226,7 @@ export function buildAngebotHtml({ betrifft, adresse, projektnummer, gewerke, ne
       <!-- CTA -->
       <tr><td style="padding:0 32px 32px;text-align:center;">
         <a href="${angebotLink}"
-           style="display:inline-block;background:#c0392b;color:#ffffff;font-size:15px;font-weight:700;padding:14px 32px;border-radius:8px;text-decoration:none;letter-spacing:0.3px;">
+           style="display:inline-block;background:#3a3a3a;color:#ffffff;font-size:15px;font-weight:700;padding:14px 32px;border-radius:8px;text-decoration:none;letter-spacing:0.3px;">
           Angebot öffnen &amp; in Hero übertragen
         </a>
       </td></tr>
@@ -234,7 +234,7 @@ export function buildAngebotHtml({ betrifft, adresse, projektnummer, gewerke, ne
       <!-- Footer -->
       <tr><td style="background:#f5f6f8;padding:16px 32px;border-top:1px solid #e5e7eb;">
         <div style="font-size:11px;color:#9ca3af;text-align:center;">
-          BAU4YOU Baranowski Bau GmbH &nbsp;|&nbsp; Automatisch generiert am ${datum} um ${uhrzeit} Uhr
+          NAPETSCHNIG. &nbsp;|&nbsp; Automatisch generiert am ${datum} um ${uhrzeit} Uhr
         </div>
       </td></tr>
 
@@ -256,7 +256,7 @@ export function buildPdfEmailHtml({ betrifft, adresse, projektnummer, absenderNa
   const uhrzeit = now.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' })
 
   const label = type === 'protokoll' ? 'Besprechungsprotokoll' : 'Angebot'
-  const headline = type === 'protokoll' ? 'BAU4YOU – Besprechungsprotokoll' : 'BAU4YOU – Angebot'
+  const headline = type === 'protokoll' ? 'NAPETSCHNIG. –Besprechungsprotokoll' : 'NAPETSCHNIG. –Angebot'
 
   return `<!DOCTYPE html>
 <html lang="de">
@@ -266,7 +266,7 @@ export function buildPdfEmailHtml({ betrifft, adresse, projektnummer, absenderNa
     <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
 
       <!-- Header -->
-      <tr><td style="background:#c0392b;padding:24px 32px;">
+      <tr><td style="background:#3a3a3a;padding:24px 32px;">
         <div style="font-size:22px;font-weight:bold;color:#ffffff;letter-spacing:0.5px;">${headline}</div>
         <div style="font-size:13px;color:#f8d7d7;margin-top:4px;">${escapeHtml(betrifft) || label}</div>
       </td></tr>
@@ -287,14 +287,14 @@ export function buildPdfEmailHtml({ betrifft, adresse, projektnummer, absenderNa
         <div style="font-size:14px;color:#2c3e50;line-height:1.7;">
           Bei Fragen stehen wir Ihnen gerne zur Verfügung.<br><br>
           Mit freundlichen Grüßen,<br>
-          <strong>${escapeHtml(absenderName) || 'BAU4YOU Baranowski Bau GmbH'}</strong>
+          <strong>${escapeHtml(absenderName) || 'NAPETSCHNIG.'}</strong>
         </div>
       </td></tr>
 
       <!-- Footer -->
       <tr><td style="background:#f5f6f8;padding:16px 32px;border-top:1px solid #e5e7eb;">
         <div style="font-size:11px;color:#9ca3af;text-align:center;">
-          BAU4YOU Baranowski Bau GmbH &nbsp;|&nbsp; Gesendet am ${datum} um ${uhrzeit} Uhr
+          NAPETSCHNIG. &nbsp;|&nbsp; Gesendet am ${datum} um ${uhrzeit} Uhr
         </div>
       </td></tr>
 

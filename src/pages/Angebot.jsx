@@ -36,11 +36,11 @@ const STATUS_COLOR = {
 }
 
 const FALLBACK_BAULEITER = [
-  { id: 'celik', name: 'Ümit Celik', email: 'celik@bau4you.at', isFallback: true },
-  { id: 'lucic', name: 'Dijan Lucic', email: 'lucic@bau4you.at', isFallback: true },
+  { id: 'celik', name: 'Ümit Celik', email: 'info@napetschnig.at', isFallback: true },
+  { id: 'lucic', name: 'Dijan Lucic', email: 'info@napetschnig.at', isFallback: true },
 ]
 
-const LUKASZ_ENTRY = { id: 'lukasz', name: 'Lukasz Baranowski', email: 'ipad@bau4you.at', isFallback: true }
+const LUKASZ_ENTRY = { id: 'lukasz', name: 'Christoph Napetschnig', email: 'napetschnig.chris@gmail.com', isFallback: true }
 
 export default function AngebotView() {
   const { id } = useParams()
@@ -530,7 +530,7 @@ export default function AngebotView() {
             brutto,
             ergaenzungen,
             hinweise,
-            userName: profile?.name || user?.email || 'Lukasz Baranowski',
+            userName: profile?.name || user?.email || 'Christoph Napetschnig',
             userEmail: profile?.email || user?.email || '',
             datum: datumFormatiert,
             empfaenger: offer.angebot_data?._empfaenger || '',

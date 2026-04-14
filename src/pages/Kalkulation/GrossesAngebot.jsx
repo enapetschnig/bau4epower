@@ -370,7 +370,7 @@ export default function GrossesAngebot() {
       .catch(err => console.error('Auto-update Fehler:', err.message))
   }, [blocks]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const SESSION_KEY = 'bau4you_gross'
+  const SESSION_KEY = 'napetschnig_gross'
   const SESSION_TTL = 4 * 60 * 60 * 1000
 
   // Restore from sessionStorage
@@ -1227,7 +1227,7 @@ NUR JSON, keine Erklärung.`
                     ergaenzungen,
                     hinweise,
                     nachlass,
-                    userName: profile?.name || user?.email || 'Lukasz Baranowski',
+                    userName: profile?.name || user?.email || 'Christoph Napetschnig',
                     userEmail: profile?.email || user?.email || '',
                     datum,
                   })

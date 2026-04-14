@@ -1,15 +1,15 @@
 export default function Logo({ size = 'md', className = '' }) {
   const heights = {
-    sm: 72,
-    md: 66,
-    lg: 84,
+    sm: 36,
+    md: 42,
+    lg: 56,
   }
 
   return (
     <div className={className}>
       <img
-        src="/Logo_B4Y_transparent.png"
-        alt="BAU4YOU Baranowski Bau GmbH"
+        src="/logo-napetschnig.png"
+        alt="NAPETSCHNIG."
         style={{ height: heights[size], width: 'auto' }}
       />
     </div>

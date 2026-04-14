@@ -24,10 +24,10 @@ const STATUS_COLOR = {
 }
 
 const FALLBACK_BAULEITER = [
-  { id: 'celik', name: 'Ümit Celik', email: 'celik@bau4you.at', isFallback: true },
-  { id: 'lucic', name: 'Dijan Lucic', email: 'lucic@bau4you.at', isFallback: true },
+  { id: 'celik', name: 'Ümit Celik', email: 'info@napetschnig.at', isFallback: true },
+  { id: 'lucic', name: 'Dijan Lucic', email: 'info@napetschnig.at', isFallback: true },
 ]
-const LUKASZ_ENTRY = { id: 'lukasz', name: 'Lukasz Baranowski', email: 'ipad@bau4you.at', isFallback: true }
+const LUKASZ_ENTRY = { id: 'lukasz', name: 'Christoph Napetschnig', email: 'napetschnig.chris@gmail.com', isFallback: true }
 
 export default function ProtokollView() {
   const { id } = useParams()
@@ -189,8 +189,8 @@ ${lines}`
     }
     isDev && console.log('[Nachtrag] Payload:', nachtragPayload)
     try {
-      sessionStorage.setItem('bau4you_nachtrag', JSON.stringify(nachtragPayload))
-      isDev && console.log('[Nachtrag] sessionStorage gesetzt:', sessionStorage.getItem('bau4you_nachtrag'))
+      sessionStorage.setItem('napetschnig_nachtrag', JSON.stringify(nachtragPayload))
+      isDev && console.log('[Nachtrag] sessionStorage gesetzt:', sessionStorage.getItem('napetschnig_nachtrag'))
     } catch (err) {
       console.error('[Nachtrag] sessionStorage Fehler:', err)
     }

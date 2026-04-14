@@ -11,7 +11,7 @@
 import { callClaude } from './claude.js'
 
 const NOMINATIM_BASE = 'https://nominatim.openstreetmap.org/search'
-const USER_AGENT = 'BAU4YOU-Angebots-App/2.0 (bau4you.at)'
+const USER_AGENT = 'NAPETSCHNIG-App/2.0 (napetschnig.at)'
 
 /**
  * Formatiert eine Adresse ins Hero-Format:
@@ -98,7 +98,7 @@ function parseNominatimResult(data, inputStreet) {
 /**
  * Schritt 1: OpenStreetMap Nominatim
  * Sucht die Adresse ZUERST in Wien (viewbox + bounded), dann ganz Österreich.
- * BAU4YOU arbeitet zu 99 % in Wien → Wien wird immer bevorzugt.
+ * NAPETSCHNIG. arbeitet zu 99 % in Wien → Wien wird immer bevorzugt.
  */
 async function lookupViaNominatim(streetOnly) {
   const headers = {
