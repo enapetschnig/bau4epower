@@ -11,7 +11,7 @@ import { loadBauleiter } from '../lib/offers.js'
 import { WHISPER_BAU_PROMPT, korrigiereTranskription } from '../utils/textFormat.js'
 import { generateMagicLink } from '../lib/magicLink.js'
 import { buildProtokollHtml } from '../lib/emailHtml.js'
-import { supabase, getEdgeFunctionHeaders } from '../lib/supabase.js'
+import { supabase, getEdgeFunctionHeaders, getFreshAccessToken } from '../lib/supabase.js'
 
 const FALLBACK_BAULEITER = [
   { id: 'celik', name: 'Ümit Celik', email: 'info@napetschnig.at', isFallback: true },
@@ -437,7 +437,7 @@ NUR JSON, keine Erklärung.`
         protokollLink: linkForEmail,
         erstelltVon: profile?.name || user?.email || '–',
       })
-      const webhookUrl = import.meta.env.VITE_MAKE_WEBHOOK_URL
+      const userToken = await getFreshAccessToken()
       const payload = {
         empfaenger: bl.email,
         betreff: `Besprechungsprotokoll: ${betrifft || 'Protokoll'}`,
@@ -451,14 +451,13 @@ NUR JSON, keine Erklärung.`
         absenderEmail: profile?.email || user?.email || '',
         htmlBody,
       }
-      console.log('[Protokoll Mail] Webhook URL:', webhookUrl)
-      console.log('[Protokoll Mail] Payload:', { ...payload, htmlBody: htmlBody?.slice(0, 100) + '...' })
-      const res = await fetch(webhookUrl, {
+      isDev && console.log('[Protokoll Mail] Payload:', { ...payload, htmlBody: htmlBody?.slice(0, 100) + '...' })
+      const res = await fetch('/api/send-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-user-token': userToken },
         body: JSON.stringify(payload),
       })
-      console.log('[Protokoll Mail] Response:', res.status, res.statusText)
+      isDev && console.log('[Protokoll Mail] Response:', res.status, res.statusText)
       if (!res.ok) throw new Error(`Webhook Fehler: ${res.status}`)
       const name = bl.name || bl.email
       setSentName(name)
@@ -797,20 +796,16 @@ ${eintraege.map(e => `[${e.time}] ${e.text}`).join('\n')}`
                 {profile?.role === 'bauleiter' && (
                   <p className="text-xs text-gray-400">E-Mail wird an dich selbst gesendet ({profile?.email || user?.email})</p>
                 )}
-                {!import.meta.env.VITE_MAKE_WEBHOOK_URL ? (
-                  <p className="text-xs text-gray-400 text-center py-1">E-Mail-Versand nicht konfiguriert</p>
-                ) : (
-                  <button
-                    onClick={handleSendBauleiter}
-                    disabled={sending}
-                    className="btn-primary w-full disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
-                  >
-                    {sending
-                      ? <><SpinnerGap size={15} weight="bold" className="animate-spin" />Wird gesendet...</>
-                      : <><PaperPlaneTilt size={15} weight="fill" />{profile?.role === 'bauleiter' ? 'E-Mail an mich senden' : selectedBauleiter ? 'An Bauleiter senden' : 'E-Mail senden'}</>
-                    }
-                  </button>
-                )}
+                <button
+                  onClick={handleSendBauleiter}
+                  disabled={sending}
+                  className="btn-primary w-full disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                >
+                  {sending
+                    ? <><SpinnerGap size={15} weight="bold" className="animate-spin" />Wird gesendet...</>
+                    : <><PaperPlaneTilt size={15} weight="fill" />{profile?.role === 'bauleiter' ? 'E-Mail an mich senden' : selectedBauleiter ? 'An Bauleiter senden' : 'E-Mail senden'}</>
+                  }
+                </button>
               </>
             ) : (
               <div className="flex items-center gap-2 text-green-600">

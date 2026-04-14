@@ -1,7 +1,7 @@
 -- ============================================================
--- BAU4YOU APP – RLS (Row Level Security) für ALLE Tabellen
+-- NAPETSCHNIG. APP – RLS (Row Level Security) für ALLE Tabellen
 -- Erstellt: 2026-04-08
--- Projekt: ukeadjwvyvytvfybgoja
+-- Projekt: qwpjhxkcgovvpkpzqyta
 --
 -- Dieses Script in Supabase SQL Editor ausführen!
 -- Dashboard → SQL Editor → New Query → Script einfügen → Run

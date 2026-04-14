@@ -1,7 +1,7 @@
 @echo off
-cd /d "F:\Users\baranowski4\Projekte\bau4you-app"
+cd /d "%~dp0"
 echo.
-echo === BAU4YOU Git Push ===
+echo === NAPETSCHNIG. Git Push ===
 echo.
 echo Pruefe auf nicht-committete Aenderungen...
 git add -A

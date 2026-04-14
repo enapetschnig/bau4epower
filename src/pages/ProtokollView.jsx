@@ -3,7 +3,7 @@ import { useParams, Navigate, Link, useNavigate } from 'react-router-dom'
 import { SpinnerGap, Printer, ArrowLeft, Trash, CheckCircle, PaperPlaneTilt, Envelope, DownloadSimple } from '@phosphor-icons/react'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useToast } from '../contexts/ToastContext.jsx'
-import { supabase, getEdgeFunctionHeaders } from '../lib/supabase.js'
+import { supabase, getEdgeFunctionHeaders, getFreshAccessToken } from '../lib/supabase.js'
 import { loadProtokoll, updateProtokollStatus, deleteProtokoll, updateProtokollData, loadProtokollMedia } from '../lib/protokolle.js'
 import { generateProtokollPdf } from '../lib/pdfGenerator.js'
 import PdfEmailSender from '../components/PdfEmailSender.jsx'
@@ -237,10 +237,10 @@ ${lines}`
         htmlBody,
       }
       isDev && console.log('[Protokoll Mail] Payload:', { ...payload, htmlBody: htmlBody?.slice(0, 100) + '...' })
-      const headers = await getEdgeFunctionHeaders()
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/webhook-proxy`, {
+      const userToken = await getFreshAccessToken()
+      const res = await fetch('/api/send-email', {
         method: 'POST',
-        headers: { ...headers, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-user-token': userToken },
         body: JSON.stringify(payload),
       })
       isDev && console.log('[Protokoll Mail] Response:', res.status, res.statusText)

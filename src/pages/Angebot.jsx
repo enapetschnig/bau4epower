@@ -3,7 +3,7 @@ import { useParams, Navigate, Link, useNavigate } from 'react-router-dom'
 import { SpinnerGap, PaperPlaneTilt, Envelope, Trash, DownloadSimple } from '@phosphor-icons/react'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useToast } from '../contexts/ToastContext.jsx'
-import { supabase, getEdgeFunctionHeaders } from '../lib/supabase.js'
+import { supabase, getEdgeFunctionHeaders, getFreshAccessToken } from '../lib/supabase.js'
 import { loadOffer, updateOfferStatus, assignBauleiter, loadBauleiter, deleteOffer, updateErgaenzungen, updateHinweise } from '../lib/offers.js'
 import { buildAngebotHtml } from '../lib/emailHtml.js'
 import { generateMagicLink } from '../lib/magicLink.js'
@@ -216,10 +216,10 @@ export default function AngebotView() {
         ergaenzungen,
         hinweise,
       })
-      const headers = await getEdgeFunctionHeaders()
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/webhook-proxy`, {
+      const userToken = await getFreshAccessToken()
+      const res = await fetch('/api/send-email', {
         method: 'POST',
-        headers: { ...headers, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-user-token': userToken },
         body: JSON.stringify({
           empfaenger: bl.email,
           betreff: `Neues Angebot: ${offer.betrifft || 'Angebot'}`,
