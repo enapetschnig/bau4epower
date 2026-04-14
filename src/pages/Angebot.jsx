@@ -35,12 +35,9 @@ const STATUS_COLOR = {
   draft: 'bg-gray-100 text-gray-600',
 }
 
-const FALLBACK_BAULEITER = [
-  { id: 'celik', name: 'Ümit Celik', email: 'info@napetschnig.at', isFallback: true },
-  { id: 'lucic', name: 'Dijan Lucic', email: 'info@napetschnig.at', isFallback: true },
-]
+const FALLBACK_BAULEITER = []
 
-const LUKASZ_ENTRY = { id: 'lukasz', name: 'Christoph Napetschnig', email: 'napetschnig.chris@gmail.com', isFallback: true }
+const ADMIN_ENTRY = { id: 'admin', name: 'Christoph Napetschnig', email: 'napetschnig.chris@gmail.com', isFallback: true }
 
 export default function AngebotView() {
   const { id } = useParams()
@@ -85,7 +82,7 @@ export default function AngebotView() {
     loadBauleiter()
       .then(list => {
         const base = list.length > 0 ? list : FALLBACK_BAULEITER
-        const merged = [...base, LUKASZ_ENTRY]
+        const merged = [...base, ADMIN_ENTRY]
         const seen = new Set()
         setBauleiterList(merged.filter(b => {
           if (seen.has(b.email)) return false
@@ -93,7 +90,7 @@ export default function AngebotView() {
           return true
         }))
       })
-      .catch(() => setBauleiterList([...FALLBACK_BAULEITER, LUKASZ_ENTRY]))
+      .catch(() => setBauleiterList([...FALLBACK_BAULEITER, ADMIN_ENTRY]))
   }, [])
 
   useEffect(() => {

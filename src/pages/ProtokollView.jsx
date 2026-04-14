@@ -23,11 +23,8 @@ const STATUS_COLOR = {
   abgeschlossen: 'bg-green-100 text-green-600',
 }
 
-const FALLBACK_BAULEITER = [
-  { id: 'celik', name: 'Ümit Celik', email: 'info@napetschnig.at', isFallback: true },
-  { id: 'lucic', name: 'Dijan Lucic', email: 'info@napetschnig.at', isFallback: true },
-]
-const LUKASZ_ENTRY = { id: 'lukasz', name: 'Christoph Napetschnig', email: 'napetschnig.chris@gmail.com', isFallback: true }
+const FALLBACK_BAULEITER = []
+const ADMIN_ENTRY = { id: 'admin', name: 'Christoph Napetschnig', email: 'napetschnig.chris@gmail.com', isFallback: true }
 
 export default function ProtokollView() {
   const { id } = useParams()
@@ -61,7 +58,7 @@ export default function ProtokollView() {
     loadBauleiter()
       .then(list => {
         const base = list.length > 0 ? list : FALLBACK_BAULEITER
-        const merged = [...base, LUKASZ_ENTRY]
+        const merged = [...base, ADMIN_ENTRY]
         const seen = new Set()
         setBauleiterList(merged.filter(b => {
           if (seen.has(b.email)) return false
@@ -69,7 +66,7 @@ export default function ProtokollView() {
           return true
         }))
       })
-      .catch(() => setBauleiterList([...FALLBACK_BAULEITER, LUKASZ_ENTRY]))
+      .catch(() => setBauleiterList([...FALLBACK_BAULEITER, ADMIN_ENTRY]))
   }, [])
 
   useEffect(() => {

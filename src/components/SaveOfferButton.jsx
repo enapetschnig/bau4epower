@@ -10,12 +10,9 @@ import { generateMagicLink } from '../lib/magicLink.js'
 
 const isDev = import.meta.env.DEV
 
-const FALLBACK_BAULEITER = [
-  { id: 'celik', name: 'Ümit Celik', email: 'info@napetschnig.at', isFallback: true },
-  { id: 'lucic', name: 'Dijan Lucic', email: 'info@napetschnig.at', isFallback: true },
-]
+const FALLBACK_BAULEITER = []
 
-const LUKASZ_ENTRY = { id: 'lukasz', name: 'Christoph Napetschnig', email: 'napetschnig.chris@gmail.com', isFallback: true }
+const ADMIN_ENTRY = { id: 'admin', name: 'Christoph Napetschnig', email: 'napetschnig.chris@gmail.com', isFallback: true }
 
 // Circular progress SVG
 function CircularProgress({ percent }) {
@@ -71,7 +68,7 @@ export default function SaveOfferButton({ betrifft, adresse, projektnummer, gewe
     loadBauleiter()
       .then(list => {
         const base = list.length > 0 ? list : FALLBACK_BAULEITER
-        const merged = [...base, LUKASZ_ENTRY]
+        const merged = [...base, ADMIN_ENTRY]
         const seen = new Set()
         setBauleiterList(merged.filter(b => {
           if (seen.has(b.email)) return false
@@ -79,7 +76,7 @@ export default function SaveOfferButton({ betrifft, adresse, projektnummer, gewe
           return true
         }))
       })
-      .catch(() => setBauleiterList([...FALLBACK_BAULEITER, LUKASZ_ENTRY]))
+      .catch(() => setBauleiterList([...FALLBACK_BAULEITER, ADMIN_ENTRY]))
   }, [])
 
   // Track whether media was already uploaded for this saved offer

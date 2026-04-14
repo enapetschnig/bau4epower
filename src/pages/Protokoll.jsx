@@ -13,11 +13,8 @@ import { generateMagicLink } from '../lib/magicLink.js'
 import { buildProtokollHtml } from '../lib/emailHtml.js'
 import { supabase, getEdgeFunctionHeaders, getFreshAccessToken } from '../lib/supabase.js'
 
-const FALLBACK_BAULEITER = [
-  { id: 'celik', name: 'Ümit Celik', email: 'info@napetschnig.at', isFallback: true },
-  { id: 'lucic', name: 'Dijan Lucic', email: 'info@napetschnig.at', isFallback: true },
-]
-const LUKASZ_ENTRY = { id: 'lukasz', name: 'Christoph Napetschnig', email: 'napetschnig.chris@gmail.com', isFallback: true }
+const FALLBACK_BAULEITER = []
+const ADMIN_ENTRY = { id: 'admin', name: 'Christoph Napetschnig', email: 'napetschnig.chris@gmail.com', isFallback: true }
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -131,7 +128,7 @@ export default function Protokoll({ embedded = false }) {
     loadBauleiter()
       .then(list => {
         const base = list.length > 0 ? list : FALLBACK_BAULEITER
-        const merged = [...base, LUKASZ_ENTRY]
+        const merged = [...base, ADMIN_ENTRY]
         const seen = new Set()
         setBauleiterList(merged.filter(b => {
           if (seen.has(b.email)) return false
@@ -139,7 +136,7 @@ export default function Protokoll({ embedded = false }) {
           return true
         }))
       })
-      .catch(() => setBauleiterList([...FALLBACK_BAULEITER, LUKASZ_ENTRY]))
+      .catch(() => setBauleiterList([...FALLBACK_BAULEITER, ADMIN_ENTRY]))
   }, [])
 
   const AUTOFILL_SYSTEM = `Extrahiere aus dem folgenden Text die Projektnummer, Adresse und den Betreff.
