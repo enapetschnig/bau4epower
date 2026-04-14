@@ -7,54 +7,39 @@ export default function Home() {
   const { profile } = useAuth()
 
   return (
-    <div className="flex flex-col px-5 pt-5"
-      style={{ minHeight: 'calc(100vh - 120px)' }}>
+    <div className="max-w-2xl mx-auto px-4 pt-6">
+      <p className="text-[13px] text-gray-400 mb-4">
+        Hallo{profile?.name ? `, ${profile.name.split(' ')[0]}` : ''}.
+      </p>
 
-      {/* Greeting */}
-      <div className="mb-5">
-        <h1 className="text-xl font-bold text-secondary">
-          Hallo{profile?.name ? `, ${profile.name.split(' ')[0]}` : ''}.
-        </h1>
-        <p className="text-xs text-gray-400 mt-0.5">Was möchten Sie tun?</p>
-      </div>
-
-      {/* 2 Buttons nebeneinander */}
-      <div className="grid grid-cols-2 gap-3">
-
-        {/* Delegieren */}
-        <button
-          onClick={() => navigate('/delegieren')}
-          className="bg-secondary text-white rounded-2xl active:scale-[0.97] transition-transform overflow-hidden flex flex-col"
-          style={{ boxShadow: '0 4px 20px 0 rgba(26,26,26,0.15)' }}
-        >
-          <div className="flex flex-col items-center justify-center gap-2 flex-1 px-3 py-5">
-            <div className="w-11 h-11 bg-white/15 rounded-xl flex items-center justify-center">
-              <ArrowsLeftRight size={24} weight="fill" className="text-white" />
-            </div>
-            <div className="text-center">
-              <p className="text-base font-bold tracking-tight">Delegieren</p>
-              <p className="text-[10px] text-white/60 mt-0.5">Nachrichten & Kontakte</p>
-            </div>
-          </div>
-        </button>
-
-        {/* Kalkulation */}
+      <div className="space-y-2">
         <button
           onClick={() => navigate('/kalkulation')}
-          className="bg-primary text-white rounded-2xl active:scale-[0.97] transition-transform overflow-hidden flex flex-col"
-          style={{ boxShadow: '0 4px 20px 0 rgba(58,58,58,0.20)' }}
+          className="w-full flex items-center gap-4 bg-white border border-gray-100 rounded-lg px-4 py-3.5 active:bg-gray-50 transition-colors text-left"
+          style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
         >
-          <div className="flex flex-col items-center justify-center gap-2 flex-1 px-3 py-5">
-            <div className="w-11 h-11 bg-white/15 rounded-xl flex items-center justify-center">
-              <Calculator size={24} weight="fill" className="text-white" />
-            </div>
-            <div className="text-center">
-              <p className="text-base font-bold tracking-tight">Kalkulation</p>
-              <p className="text-[10px] text-white/60 mt-0.5">Angebote & Preisliste</p>
-            </div>
+          <div className="w-10 h-10 bg-primary rounded-md flex items-center justify-center flex-shrink-0">
+            <Calculator size={20} weight="fill" className="text-white" />
+          </div>
+          <div>
+            <p className="text-[13px] font-semibold text-secondary">Kalkulation</p>
+            <p className="text-[11px] text-gray-400">Angebote, Preisliste, Vorlagen</p>
           </div>
         </button>
 
+        <button
+          onClick={() => navigate('/delegieren')}
+          className="w-full flex items-center gap-4 bg-white border border-gray-100 rounded-lg px-4 py-3.5 active:bg-gray-50 transition-colors text-left"
+          style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+        >
+          <div className="w-10 h-10 bg-secondary rounded-md flex items-center justify-center flex-shrink-0">
+            <ArrowsLeftRight size={20} weight="fill" className="text-white" />
+          </div>
+          <div>
+            <p className="text-[13px] font-semibold text-secondary">Delegieren</p>
+            <p className="text-[11px] text-gray-400">Nachrichten & Kontakte</p>
+          </div>
+        </button>
       </div>
     </div>
   )

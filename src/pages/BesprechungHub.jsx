@@ -1,44 +1,34 @@
 import { useSearchParams } from 'react-router-dom'
-import { PencilLine, ListBullets } from '@phosphor-icons/react'
 import Protokoll from './Protokoll.jsx'
 import Protokolle from './Protokolle.jsx'
 
 const TABS = [
-  { id: 'neu', label: 'Neue Besprechung', Icon: PencilLine },
-  { id: 'liste', label: 'Besprechungen', Icon: ListBullets },
+  { id: 'neu', label: 'Neue Besprechung' },
+  { id: 'liste', label: 'Besprechungen' },
 ]
 
 export default function BesprechungHub() {
   const [searchParams, setSearchParams] = useSearchParams()
   const tab = searchParams.get('tab') || 'neu'
 
-  function setTab(id) {
-    setSearchParams({ tab: id })
-  }
-
   return (
-    <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
-      {/* Tab Selector */}
-      <div className="card p-2">
-        <div className="grid grid-cols-2 gap-1">
-          {TABS.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`flex flex-col items-center gap-1 py-3 px-2 rounded-xl transition-all
-                ${tab === t.id
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'text-gray-500 active:bg-gray-100'
-                }`}
-            >
-              <t.Icon size={22} weight={tab === t.id ? 'fill' : 'regular'} />
-              <span className="text-xs font-medium leading-tight text-center">{t.label}</span>
-            </button>
-          ))}
-        </div>
+    <div className="max-w-2xl mx-auto px-4 py-3 space-y-3">
+      <div className="flex gap-px bg-gray-100 rounded-md p-0.5">
+        {TABS.map(t => (
+          <button
+            key={t.id}
+            onClick={() => setSearchParams({ tab: t.id })}
+            className={`flex-1 py-1.5 text-[12px] font-medium rounded-[5px] transition-all
+              ${tab === t.id
+                ? 'bg-white text-secondary shadow-sm'
+                : 'text-gray-400'
+              }`}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
-      {/* Tab Content */}
       {tab === 'neu' && <Protokoll embedded />}
       {tab === 'liste' && <Protokolle embedded />}
     </div>

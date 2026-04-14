@@ -29,40 +29,40 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-primary text-white font-semibold py-2.5 px-5 rounded-lg
-           active:bg-primary-dark transition-colors duration-150
-           disabled:opacity-50 disabled:cursor-not-allowed
-           min-h-[44px] flex items-center justify-center gap-2 text-sm;
+    @apply bg-primary text-white font-medium py-2 px-4 rounded-md
+           active:bg-primary-dark transition-colors duration-100
+           disabled:opacity-40 disabled:cursor-not-allowed
+           min-h-[40px] flex items-center justify-center gap-1.5 text-[13px];
   }
   .btn-secondary {
-    @apply bg-white text-primary font-semibold py-2.5 px-5 rounded-lg border border-gray-200
-           active:bg-gray-50 transition-colors duration-150
-           min-h-[44px] flex items-center justify-center gap-2 text-sm;
+    @apply bg-white text-secondary font-medium py-2 px-4 rounded-md border border-gray-200
+           active:bg-gray-50 transition-colors duration-100
+           min-h-[40px] flex items-center justify-center gap-1.5 text-[13px];
   }
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-3;
+    @apply bg-white rounded-lg border border-gray-100 p-3;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
   }
   .input-field {
-    @apply w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm
-           focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40
-           bg-white min-h-[42px];
+    @apply w-full rounded-md border border-gray-200 px-3 py-2 text-[13px]
+           focus:outline-none focus:border-gray-400
+           bg-white min-h-[38px];
   }
   .copy-field {
-    @apply flex items-center gap-2 bg-gray-light rounded-lg px-3 py-2
-           cursor-pointer active:bg-gray-200 transition-colors duration-150
-           select-none min-h-[44px];
+    @apply flex items-center gap-2 bg-gray-50 rounded-md px-2.5 py-1.5
+           cursor-pointer active:bg-gray-100 transition-colors duration-100
+           select-none min-h-[36px] text-[13px];
   }
-  /* iOS-minimum touch target for small icon buttons */
   .touch-btn {
     @apply relative flex items-center justify-center;
-    min-width: 44px;
-    min-height: 44px;
+    min-width: 40px;
+    min-height: 40px;
   }
   .section-title {
-    @apply text-lg font-bold text-secondary;
+    @apply text-sm font-semibold text-secondary;
   }
   .label {
-    @apply text-xs font-medium text-gray-500 uppercase tracking-wide;
+    @apply text-[10px] font-medium text-gray-400 uppercase tracking-wider;
   }
 }
 
