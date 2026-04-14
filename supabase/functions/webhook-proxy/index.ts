@@ -1,7 +1,7 @@
 import { jwtDecode } from 'https://esm.sh/jwt-decode@4'
 
 const ALLOWED_ORIGINS = [
-  'https://bau4you-app.vercel.app',
+  'https://bau4epower.vercel.app',
   'http://localhost:5173',
   'http://localhost:3000',
 ]
