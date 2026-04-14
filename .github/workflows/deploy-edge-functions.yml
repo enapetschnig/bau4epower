@@ -21,21 +21,21 @@ jobs:
           version: latest
 
       - name: Deploy whisper-proxy
-        run: supabase functions deploy whisper-proxy --project-ref ukeadjwvyvytvfybgoja
+        run: supabase functions deploy whisper-proxy --project-ref qwpjhxkcgovvpkpzqyta
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
       - name: Deploy claude-proxy
-        run: supabase functions deploy claude-proxy --project-ref ukeadjwvyvytvfybgoja
+        run: supabase functions deploy claude-proxy --project-ref qwpjhxkcgovvpkpzqyta
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
       - name: Deploy webhook-proxy
-        run: supabase functions deploy webhook-proxy --project-ref ukeadjwvyvytvfybgoja
+        run: supabase functions deploy webhook-proxy --project-ref qwpjhxkcgovvpkpzqyta
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
       - name: Deploy generate-magic-link
-        run: supabase functions deploy generate-magic-link --project-ref ukeadjwvyvytvfybgoja
+        run: supabase functions deploy generate-magic-link --project-ref qwpjhxkcgovvpkpzqyta
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
