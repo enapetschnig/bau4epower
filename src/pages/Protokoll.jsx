@@ -366,10 +366,10 @@ NUR JSON, keine Erklärung.`
       formData.append('model', 'whisper-1')
       formData.append('language', 'de')
       formData.append('prompt', WHISPER_BAU_PROMPT)
-      const headers = await getEdgeFunctionHeaders()
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/whisper-proxy`, {
+      const userToken = await getFreshAccessToken()
+      const res = await fetch('/api/whisper-proxy', {
         method: 'POST',
-        headers,
+        headers: { 'x-user-token': userToken },
         body: formData,
       })
       if (!res.ok) throw new Error('Whisper Fehler')

@@ -1,10 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { Microphone, Stop, SpinnerGap } from '@phosphor-icons/react'
 import { formatSpracheingabe, korrigiereTranskription, WHISPER_BAU_PROMPT } from '../utils/textFormat.js'
-import { supabase, getEdgeFunctionHeaders } from '../lib/supabase.js'
+import { supabase, getEdgeFunctionHeaders, getFreshAccessToken } from '../lib/supabase.js'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 const USE_WHISPER = Boolean(SUPABASE_URL)
 
 // Kompakter Mikrofon-Button für Inline-Bearbeitung (ohne Textarea/Submit)
@@ -89,10 +88,10 @@ export default function InlineMicButton({ onResult, onError, disabled = false, t
       formData.append('model', 'whisper-1')
       formData.append('language', 'de')
       formData.append('prompt', WHISPER_BAU_PROMPT)
-      const headers = await getEdgeFunctionHeaders()
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/whisper-proxy`, {
+      const userToken = await getFreshAccessToken()
+      const res = await fetch('/api/whisper-proxy', {
         method: 'POST',
-        headers,
+        headers: { 'x-user-token': userToken },
         body: formData,
       })
       if (!res.ok) throw new Error('Whisper Fehler')

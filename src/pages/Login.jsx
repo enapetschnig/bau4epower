@@ -24,65 +24,57 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-light flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-sm space-y-8">
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6">
+      <div className="w-full max-w-sm space-y-10">
         {/* Logo */}
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-2">
           <Logo size="lg" />
-          <p className="text-gray-500 text-sm text-center">
-            KI-gestützte Angebotserstellung
-          </p>
+          <p className="text-gray-400 text-[11px] tracking-widest uppercase">Angebots-App</p>
         </div>
 
         {/* Form */}
-        <div className="card space-y-4">
-          <h1 className="text-xl font-bold text-secondary text-center">Anmelden</h1>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <input
+              type="email"
+              className="w-full border-b border-gray-200 px-1 py-3 text-sm focus:outline-none focus:border-secondary bg-transparent placeholder:text-gray-300 transition-colors"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="E-Mail"
+              required
+              autoComplete="email"
+            />
+          </div>
+          <div>
+            <input
+              type="password"
+              className="w-full border-b border-gray-200 px-1 py-3 text-sm focus:outline-none focus:border-secondary bg-transparent placeholder:text-gray-300 transition-colors"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Passwort"
+              required
+              autoComplete="current-password"
+            />
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="label mb-2 block">E-Mail</label>
-              <input
-                type="email"
-                className="input-field"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="name@napetschnig.at"
-                required
-                autoComplete="email"
-              />
+          {error && (
+            <div className="text-xs text-red-500 text-center py-1">
+              {error}
             </div>
-            <div>
-              <label className="label mb-2 block">Passwort</label>
-              <input
-                type="password"
-                className="input-field"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                autoComplete="current-password"
-              />
-            </div>
+          )}
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
-                {error}
-              </div>
-            )}
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn-primary w-full mt-6"
+          >
+            {loading ? (
+              <SpinnerGap size={18} weight="bold" className="animate-spin" />
+            ) : 'Anmelden'}
+          </button>
+        </form>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary w-full"
-            >
-              {loading ? (
-                <SpinnerGap size={20} weight="bold" className="animate-spin" />
-              ) : 'Anmelden'}
-            </button>
-          </form>
-        </div>
-
-        <p className="text-center text-xs text-gray-400">
+        <p className="text-center text-[10px] text-gray-300 tracking-wide">
           NAPETSCHNIG. · Wien
         </p>
       </div>

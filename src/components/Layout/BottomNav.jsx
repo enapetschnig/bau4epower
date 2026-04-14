@@ -19,9 +19,9 @@ export default function BottomNav() {
         {navItems.map(({ to, label, Icon }) => (
           <NavLink key={to} to={to} className="flex-1">
             {({ isActive }) => (
-              <div className={`flex flex-col items-center justify-center py-2 gap-0.5 min-h-[60px] transition-colors ${isActive ? 'text-primary' : 'text-gray-400'}`}>
-                <Icon size={24} weight={isActive ? 'fill' : 'regular'} />
-                <span className={`text-[10px] font-medium leading-tight text-center ${isActive ? 'text-primary' : 'text-gray-400'}`}>
+              <div className={`flex flex-col items-center justify-center py-1.5 gap-0.5 min-h-[52px] transition-colors ${isActive ? 'text-primary' : 'text-gray-400'}`}>
+                <Icon size={20} weight={isActive ? 'fill' : 'regular'} />
+                <span className={`text-[9px] font-medium leading-tight text-center ${isActive ? 'text-primary' : 'text-gray-400'}`}>
                   {label}
                 </span>
               </div>

@@ -1,10 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { Microphone, Stop, SpinnerGap, Lightning } from '@phosphor-icons/react'
 import { WHISPER_BAU_PROMPT, korrigiereTranskription } from '../utils/textFormat.js'
-import { supabase, getEdgeFunctionHeaders } from '../lib/supabase.js'
+import { supabase, getEdgeFunctionHeaders, getFreshAccessToken } from '../lib/supabase.js'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 const USE_WHISPER = Boolean(SUPABASE_URL)
 
 // Primary split: "nächste Position"
@@ -487,16 +486,16 @@ export default function SpeechInput({
       const { formData, ext } = buildWhisperFormData(blob, mimeType)
       console.log('[Whisper] Sending as:', `audio.${ext}`, '| blob type:', blob.type, '| size:', blob.size)
 
-      const edgeHeaders = await getEdgeFunctionHeaders()
+      const userToken = await getFreshAccessToken()
 
-      const url = `${SUPABASE_URL}/functions/v1/whisper-proxy`
+      const url = '/api/whisper-proxy'
       let data
 
       // Try fetch first, fall back to XMLHttpRequest (iOS Safari fix)
       try {
         const response = await fetch(url, {
           method: 'POST',
-          headers: edgeHeaders,
+          headers: { 'x-user-token': userToken },
           body: formData,
         })
         if (!response.ok) {
@@ -514,7 +513,7 @@ export default function SpeechInput({
         if (isLoadFailed) {
           console.warn('[Whisper] fetch failed (iOS?), retrying with XHR:', fetchErr.message)
           const { formData: retryFormData } = buildWhisperFormData(blob, mimeType)
-          data = await xhrUpload(url, retryFormData, edgeHeaders)
+          data = await xhrUpload(url, retryFormData, { 'x-user-token': userToken })
         } else {
           throw fetchErr
         }

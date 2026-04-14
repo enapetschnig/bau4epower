@@ -20,8 +20,8 @@ function ProtectedRoutes() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-light">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center">
-            <span className="text-white text-2xl font-extrabold" style={{ fontFamily: 'Georgia, serif' }}>N.</span>
+          <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
+            <span className="text-white text-lg font-extrabold" style={{ fontFamily: 'Georgia, serif' }}>N.</span>
           </div>
           <p className="text-gray-400 text-sm">Laden...</p>
         </div>
