@@ -1,0 +1,67 @@
+import js from '@eslint/js'
+import reactPlugin from 'eslint-plugin-react'
+import reactHooksPlugin from 'eslint-plugin-react-hooks'
+
+export default [
+  js.configs.recommended,
+  {
+    plugins: { react: reactPlugin, 'react-hooks': reactHooksPlugin },
+    languageOptions: {
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        ecmaFeatures: { jsx: true },
+      },
+      globals: {
+        window: 'readonly',
+        document: 'readonly',
+        console: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        navigator: 'readonly',
+        confirm: 'readonly',
+        location: 'readonly',
+        fetch: 'readonly',
+        URL: 'readonly',
+        File: 'readonly',
+        Blob: 'readonly',
+        FormData: 'readonly',
+        Event: 'readonly',
+        HTMLElement: 'readonly',
+        process: 'readonly',
+        MediaRecorder: 'readonly',
+        SpeechRecognition: 'readonly',
+        webkitSpeechRecognition: 'readonly',
+        AudioContext: 'readonly',
+        webkitAudioContext: 'readonly',
+        FileReader: 'readonly',
+        atob: 'readonly',
+        btoa: 'readonly',
+        alert: 'readonly',
+        sessionStorage: 'readonly',
+        localStorage: 'readonly',
+        requestAnimationFrame: 'readonly',
+        cancelAnimationFrame: 'readonly',
+        Image: 'readonly',
+        MutationObserver: 'readonly',
+      },
+    },
+    settings: {
+      react: { version: 'detect' },
+    },
+    rules: {
+      ...reactPlugin.configs.recommended.rules,
+      'react/prop-types': 'off',
+      'react/react-in-jsx-scope': 'off',
+      'react/no-unescaped-entities': 'off',
+      'no-unused-vars': 'warn',
+      'no-empty': 'warn',
+      'no-control-regex': 'off',
+      'no-useless-escape': 'warn',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+    },
+  },
+]

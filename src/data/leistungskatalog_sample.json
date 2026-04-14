@@ -1,0 +1,101 @@
+[
+  {
+    "gewerk": "Gemeinkosten",
+    "positionsnummer": "GK001",
+    "kurztext": "Baustellen-Gemeinkosten",
+    "langtext": "Allgemeine Baustellengemeinkosten inkl. An- und Abfahrt, Entsorgung von Kleinmengen, Schutzmaßnahmen.",
+    "einheit": "pausch",
+    "einzelpreis": 150.00,
+    "materialanteil_prozent": 0,
+    "zeit_pro_einheit_min": 90,
+    "stundensatz": 112
+  },
+  {
+    "gewerk": "Abbruch",
+    "positionsnummer": "AB001",
+    "kurztext": "Abbruch Trennwand, Mauerwerk",
+    "langtext": "Abbruch einer nicht tragenden Trennwand aus Mauerwerk, inkl. Entsorgung und Aufräumen.",
+    "einheit": "m²",
+    "einzelpreis": 35.00,
+    "materialanteil_prozent": 5,
+    "zeit_pro_einheit_min": 25,
+    "stundensatz": 60
+  },
+  {
+    "gewerk": "Trockenbau",
+    "positionsnummer": "TB001",
+    "kurztext": "GK-Wand einfach beplankt",
+    "langtext": "Gipskartonwand auf Metallunterkonstruktion, einfach beplankt beidseitig, inkl. Verspachtelung Q2.",
+    "einheit": "m²",
+    "einzelpreis": 45.00,
+    "materialanteil_prozent": 40,
+    "zeit_pro_einheit_min": 35,
+    "stundensatz": 70
+  },
+  {
+    "gewerk": "Trockenbau",
+    "positionsnummer": "TB002",
+    "kurztext": "GK-Wand doppelt beplankt",
+    "langtext": "Gipskartonwand auf Metallunterkonstruktion, doppelt beplankt beidseitig, inkl. Verspachtelung Q2.",
+    "einheit": "m²",
+    "einzelpreis": 65.00,
+    "materialanteil_prozent": 45,
+    "zeit_pro_einheit_min": 50,
+    "stundensatz": 70
+  },
+  {
+    "gewerk": "Trockenbau",
+    "positionsnummer": "TB003",
+    "kurztext": "GK-Decke abgehängt",
+    "langtext": "Abgehängte Gipskartondecke auf Metallunterkonstruktion, inkl. Verspachtelung Q2.",
+    "einheit": "m²",
+    "einzelpreis": 55.00,
+    "materialanteil_prozent": 38,
+    "zeit_pro_einheit_min": 45,
+    "stundensatz": 70
+  },
+  {
+    "gewerk": "Maler",
+    "positionsnummer": "MA001",
+    "kurztext": "Dispersionsfarbe 2x",
+    "langtext": "Dispersionsfarbe auf Putz oder Gipskarton, 2-maliger Anstrich, weiß oder Farbton nach Wahl.",
+    "einheit": "m²",
+    "einzelpreis": 18.50,
+    "materialanteil_prozent": 30,
+    "zeit_pro_einheit_min": 15,
+    "stundensatz": 65
+  },
+  {
+    "gewerk": "Fliesenleger",
+    "positionsnummer": "FL001",
+    "kurztext": "Bodenfliesen verlegen",
+    "langtext": "Bodenfliesen bis 60x60cm verlegen inkl. Dünnbettmörtel, ohne Material.",
+    "einheit": "m²",
+    "einzelpreis": 38.00,
+    "materialanteil_prozent": 20,
+    "zeit_pro_einheit_min": 30,
+    "stundensatz": 70
+  },
+  {
+    "gewerk": "Fliesenleger",
+    "positionsnummer": "FL002",
+    "kurztext": "Wandfliesen verlegen",
+    "langtext": "Wandfliesen bis 30x60cm verlegen inkl. Dünnbettmörtel und Fugenmörtel, ohne Material.",
+    "einheit": "m²",
+    "einzelpreis": 45.00,
+    "materialanteil_prozent": 20,
+    "zeit_pro_einheit_min": 35,
+    "stundensatz": 70
+  },
+  {
+    "gewerk": "Reinigung",
+    "positionsnummer": "RE001",
+    "kurztext": "Bauendreinigung",
+    "langtext": "Bauendreinigung nach Abschluss der Arbeiten, inkl. Fenster innen, Böden, Sanitär.",
+    "einheit": "m²",
+    "einzelpreis": 8.50,
+    "materialanteil_prozent": 15,
+    "zeit_pro_einheit_min": 8,
+    "stundensatz": 55
+  }
+]

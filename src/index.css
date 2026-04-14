@@ -1,0 +1,196 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes vorschlagBlink {
+  from { opacity: 1; }
+  to   { opacity: 0.45; }
+}
+
+@keyframes unsicherBlink {
+  from { opacity: 1; }
+  to   { opacity: 0.5; }
+}
+
+@keyframes unsicherBorder {
+  from { border-color: #e74c3c; }
+  to   { border-color: #f39c12; }
+}
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-gray-light text-secondary font-sans;
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-white font-semibold py-3 px-6 rounded-xl
+           active:bg-primary-dark transition-colors duration-150
+           disabled:opacity-50 disabled:cursor-not-allowed
+           min-h-[48px] flex items-center justify-center gap-2;
+  }
+  .btn-secondary {
+    @apply bg-white text-primary font-semibold py-3 px-6 rounded-xl border border-primary/30
+           active:bg-primary/5 transition-colors duration-150
+           min-h-[48px] flex items-center justify-center gap-2;
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-4;
+  }
+  .input-field {
+    @apply w-full rounded-xl border border-gray-200 px-4 py-3 text-sm
+           focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
+           bg-white min-h-[48px];
+  }
+  .copy-field {
+    @apply flex items-center gap-2 bg-gray-light rounded-lg px-3 py-2
+           cursor-pointer active:bg-gray-200 transition-colors duration-150
+           select-none min-h-[44px];
+  }
+  /* iOS-minimum touch target for small icon buttons */
+  .touch-btn {
+    @apply relative flex items-center justify-center;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .section-title {
+    @apply text-lg font-bold text-secondary;
+  }
+  .label {
+    @apply text-xs font-medium text-gray-500 uppercase tracking-wide;
+  }
+}
+
+@layer utilities {
+  .pulse-mic {
+    animation: pulse-mic 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse-mic {
+    0%   { box-shadow: 0 0 0 0 rgba(204, 0, 0, 0.45), 0 8px 24px rgba(204, 0, 0, 0.35); }
+    60%  { box-shadow: 0 0 0 22px rgba(204, 0, 0, 0), 0 8px 24px rgba(204, 0, 0, 0.35); }
+    100% { box-shadow: 0 0 0 0 rgba(204, 0, 0, 0), 0 8px 24px rgba(204, 0, 0, 0.35); }
+  }
+}
+
+/* Screen: hide print-only elements */
+.hidden-screen { display: none; }
+.print-page-header { display: none; }
+
+/* ── PRINT STYLES ─────────────────────────────────────────── */
+@media print {
+  @page {
+    margin: 4mm 8mm;
+    size: A4 portrait;
+  }
+
+  /* Hide everything except the print area */
+  body * {
+    visibility: hidden;
+  }
+  #katalog-print-area,
+  #katalog-print-area * {
+    visibility: visible;
+  }
+  #katalog-print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Page header – static flow, appears once at top of page 1 */
+  .print-page-header {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5mm 0 1.5mm;
+    border-bottom: 1.5px solid #CC0000;
+    margin-bottom: 2mm;
+  }
+  .print-content {
+    margin-top: 0;
+  }
+
+  /* Gewerk blocks – NO forced page breaks, let browser decide */
+  .print-gewerk-block {
+    page-break-before: auto;
+    break-before: auto;
+    margin-bottom: 3mm;
+  }
+
+  /* Gewerk heading – visible in both web and print */
+  .print-gewerk-heading {
+    background: #fef2f2 !important;
+    color: #CC0000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    font-weight: 700;
+    font-size: 11px;
+    padding: 1mm 3mm;
+    border-bottom: 1.5px solid #CC0000;
+    border-radius: 0;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  /* Kurz table */
+  .print-table-kurz {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+    line-height: 1.2;
+  }
+  .print-table-kurz th {
+    background: #f3f4f6;
+    color: #374151;
+    padding: 0.5mm 2mm;
+    text-align: left;
+    font-weight: 600;
+    font-size: 9px;
+    text-transform: uppercase;
+  }
+  .print-table-kurz td {
+    padding: 0.3mm 2mm;
+    border-bottom: 0.3px solid #e5e7eb;
+  }
+  .print-table-kurz tr:nth-child(even) td {
+    background: #f9fafb;
+  }
+
+  /* Detail table */
+  .print-table-detail {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+    line-height: 1.2;
+  }
+  .print-table-detail th {
+    background: #f3f4f6;
+    color: #374151;
+    padding: 0.5mm 2mm;
+    text-align: left;
+    font-weight: 600;
+    font-size: 9px;
+    text-transform: uppercase;
+  }
+  .print-table-detail td {
+    padding: 0.3mm 2mm;
+    border-bottom: 0.3px solid #e5e7eb;
+    vertical-align: top;
+  }
+  .print-table-detail tr:nth-child(even) td {
+    background: #f9fafb;
+  }
+  .print-detail-desc {
+    color: #6b7280;
+    font-size: 8px;
+    display: block;
+  }
+}

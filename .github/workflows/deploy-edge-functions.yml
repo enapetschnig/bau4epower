@@ -1,0 +1,41 @@
+name: Deploy Supabase Edge Functions
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'supabase/functions/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy whisper-proxy
+        run: supabase functions deploy whisper-proxy --project-ref ukeadjwvyvytvfybgoja
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Deploy claude-proxy
+        run: supabase functions deploy claude-proxy --project-ref ukeadjwvyvytvfybgoja
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Deploy webhook-proxy
+        run: supabase functions deploy webhook-proxy --project-ref ukeadjwvyvytvfybgoja
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Deploy generate-magic-link
+        run: supabase functions deploy generate-magic-link --project-ref ukeadjwvyvytvfybgoja
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
