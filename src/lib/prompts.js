@@ -31,12 +31,11 @@ KALKULATION (strikt in dieser Reihenfolge):
 9. lohnanteil_prozent = 100 − materialanteil_prozent (NICHT separat rechnen!)
 Kalkuliere NIE zu günstig – IMMER den oberen Preisbereich ansetzen.
 
-GEWERK: 01 Gemeinkosten | 02 Abbruch | 03 Bautischler | 04 Glaser | 05 Elektriker | 06 Installateur | 07 Baumeister | 08 Trockenbau | 09 Maler | 10 Anstreicher | 11 Fliesenleger | 12 Bodenleger | 13 Reinigung | 16 Elektrozuleitung
+GEWERK: 01 Gemeinkosten | 02 Abbruch | 06 Installateur | 13 Reinigung
 
 STUNDENSATZ BEI GEWERK 02 (ABBRUCH):
-Abbruch-Stundensatz (02-997/998/999) gilt NUR für reines Abbrechen, Stemmen, Schneiden, Demontieren.
-Folgearbeiten innerhalb einer Abbruch-Position (Träger einbauen, Zumauern, Sturz setzen, Verputzen, Unterfangung) → BAUMEISTER-Stundensatz (07-997/998/999).
-Bei gemischten Positionen (z.B. "Wandöffnung schneiden und Träger einbauen"): Minuten anteilig berechnen → gewichteter Stundensatz = (Abbruch-Min × Abbruch-Satz + Baumeister-Min × Baumeister-Satz) ÷ Gesamt-Min.
+Abbruch-Stundensatz (02-997/998/999) gilt für Abbrechen, Stemmen, Demontieren alter Installationen.
+Für Installationsarbeiten nach Abbruch → INSTALLATEUR-Stundensatz (06-997/998/999) verwenden.
 
 POSITIONSNUMMER-ERKENNUNG: Wenn der User eine Leistungsnummer nennt (Format XX-XXX, z.B. "09-020", "null zwei einhundert" → 02-100, "neun null null eins" → 09-001), suche sie in der Preisliste und übernimm die Position komplett (Preis, Kurztext, Langtext, Einheit, Stundensatz), aus_preisliste: true. Zahlen können als Ziffern oder ausgeschrieben kommen (eins=1, zwei=2, ..., null=0, hundert=100, dreißig=30 etc.).
 
@@ -110,28 +109,16 @@ FALL 2 – NUR Maler (kein Abbruch, kleineres Angebot):
 FALL 3 – NUR Abbruch (kein Maler):
   → Abdeckarbeiten als ERSTE Position im Gewerk Abbruch.
 FALL 4 – Weder Abbruch noch Maler:
-  → Abdeckarbeiten als ERSTE Position im erstbesten schmutzigen Gewerk (z.B. Fliesenleger, Baumeister, Trockenbau). Falls keines davon vorhanden → in Gemeinkosten.
+  → Abdeckarbeiten als ERSTE Position im Gewerk Installateur oder Gemeinkosten.
 
 GEWERKE-REIHENFOLGE wenn vorhanden: ${GEWERKE_REIHENFOLGE.join(' → ')}
 
-GEWERK-ZUORDNUNG – SORGFÄLTIG WÄHLEN (nach TÄTIGKEIT, nicht nach Material):
-Gemeinkosten   → Bauleitung, Koordination, Gerüst, Bürocontainer/Baustelleneinrichtungscontainer (kein Schuttcontainer!)
-Abbruch        → Abriss, Rückbau, Demontage, Stemmen, Mulde, Schuttcontainer, Containerentsorgung, Bauschutt-Abtransport, Entsorgungskosten
-Bautischler    → Holztüren, Zargen, Einbauschränke, Holzkonstruktionen
-Glaser         → Glasscheiben, Verglasung, Glastüren, Spiegel, Glasduschwände
-Elektriker     → Elektroinstallation, Steckdosen, Schalter, Leitungen, Leuchten
-Installateur   → Sanitär, Heizung, Wasserinstallation, Rohre, WC, Waschbecken, Heizkörper
-Baumeister     → Mauerwerk, Beton, Estrich, Unterlagsboden, Verputz, Innen-/Außenputz
-Trockenbau     → Gipskartonplatten, Ständerwände, Abhängdecken, Vorsatzschalen, Rigips, Knauf
-Maler          → Streichen, Anstrich, Dispersionsfarbe, Spachteln (Wände/Decken), Tapezieren, Lasieren, Grundieren, Spachteltechniken (venezianisch, italienisch, Beton-Optik, Rollputz, Strukturputz)
-Anstreicher    → Lackieren, Holzlack, Metallanstrich, Öl/Lasur auf Holz, Außenanstrich mit Lack
-Fliesenleger   → Fliesen, Keramik, Mosaik, Feinsteinzeug, Naturstein, Verfugen
-Bodenleger     → Parkett, Laminat, Vinyl, Linoleum, Teppich, Holzboden
+GEWERK-ZUORDNUNG – NUR DIESE 4 GEWERKE VERWENDEN:
+Gemeinkosten   → Bauleitung, Koordination, Baustelleneinrichtung, An-/Abfahrt, Materialtransport
+Abbruch        → Abriss, Rückbau, Demontage alter Installationen, Stemmen, Mulde, Schuttcontainer, Entsorgung
+Installateur   → ALLES rund um Sanitär, Heizung, Lüftung, Wasserinstallation, Abwasser, Rohre, WC, Waschbecken, Heizkörper, Fußbodenheizung, Wärmepumpen, Gasthermen, Armaturen, Warmwasser
 Reinigung      → Endreinigung, Baustellenreinigung, Grundreinigung
-WICHTIG Gewerk-Auswahl:
-- Spachteltechnik/Lasur/Wandanstrich → IMMER Maler. Gipskarton/Ständerwand → IMMER Trockenbau.
-- Mulde/Schuttcontainer/Bauschutt → IMMER Abbruch (02), NIEMALS Reinigung oder Gemeinkosten!
-- Bürocontainer/Baustellencontainer (zum Wohnen/Lagern) → Gemeinkosten (01).
+WICHTIG: Es gibt NUR diese 4 Gewerke. Alles was nicht Gemeinkosten, Abbruch oder Reinigung ist → Installateur!
 
 WASSERSCHADEN – SPEZIAL-POSITIONEN AUS PREISLISTE (ZWINGEND VERWENDEN):
 Wenn "Wasserschaden" oder "Wasserfleck" oder "Feuchtigkeit" oder "durchfeuchtete Wand" erwähnt wird:
@@ -146,9 +133,8 @@ Wenn "Wasserschaden" oder "Wasserfleck" oder "Feuchtigkeit" oder "durchfeuchtete
 - aus_preisliste: true für alle Wasserschaden-Positionen.
 
 STUNDENSATZ BEI GEWERK 02 (ABBRUCH):
-Abbruch-Stundensatz (02-997/998/999) gilt NUR für reines Abbrechen, Stemmen, Schneiden, Demontieren.
-Folgearbeiten innerhalb einer Abbruch-Position (Träger einbauen, Zumauern, Sturz setzen, Verputzen, Unterfangung) → BAUMEISTER-Stundensatz (07-997/998/999).
-Bei gemischten Positionen (z.B. "Wandöffnung schneiden und Träger einbauen"): Minuten anteilig berechnen → gewichteter Stundensatz = (Abbruch-Min × Abbruch-Satz + Baumeister-Min × Baumeister-Satz) ÷ Gesamt-Min.
+Abbruch-Stundensatz (02-997/998/999) gilt für Abbrechen, Stemmen, Demontieren alter Installationen.
+Für Installationsarbeiten nach Abbruch → INSTALLATEUR-Stundensatz (06-997/998/999) verwenden.
 
 MENGENBERECHNUNG BEI RÄUMEN – ZWINGEND BEACHTEN:
 Wenn der User Raummaße angibt (z.B. "5x4m, 2,80m hoch"), berechne die Fläche selbst:
@@ -198,7 +184,7 @@ VERBOTEN für Regiestunden: Eigene Preise erfinden! IMMER die Katalogpositionen 
 
 LEISTUNGSNUMMER FÜR NEUE POSITIONEN (aus_preisliste: false):
 Verwende den Gewerk-Prefix + "-NEU". Bei mehreren neuen Positionen im selben Gewerk: "-NEU1", "-NEU2" usw.
-Gewerk-Prefixe: Gemeinkosten=01, Abbruch=02, Bautischler=03, Glaser=04, Elektriker=05, Installateur=06, Baumeister=07, Trockenbau=08, Maler=09, Anstreicher=10, Fliesenleger=11, Bodenleger=12, Reinigung=13
+Gewerk-Prefixe: Gemeinkosten=01, Abbruch=02, Installateur=06, Reinigung=13
 Beispiele: Neue Malerposition → "09-NEU", zweite → "09-NEU1". NIEMALS Formate wie "M001" verwenden.
 
 PREISPOLITIK FÜR NEUE POSITIONEN (nicht in Preisliste) – ZWINGEND:
@@ -662,7 +648,7 @@ VORGEHEN:
 
 4. Zeitangabe des Users hat VORRANG: "10 Stunden" → lohnkosten_minuten: 600
 
-GEWERK-PREFIXE: Gemeinkosten=01, Abbruch=02, Bautischler=03, Glaser=04, Elektriker=05, Installateur=06, Baumeister=07, Trockenbau=08, Maler=09, Anstreicher=10, Fliesenleger=11, Bodenleger=12, Reinigung=13
+GEWERK-PREFIXE: Gemeinkosten=01, Abbruch=02, Installateur=06, Reinigung=13
 
 WASSERSCHADEN: Bei "Wasserschaden"/"Wasserfleck" → Positionen 09-400 bis 09-403 nach Fläche, 09-410 (Feuchtigkeitsmessung) IMMER dazu. aus_preisliste: true.
 
@@ -707,12 +693,11 @@ Trockenbau  → Gipskarton, Ständerwände, Abhängdecken, Vorsatzschalen, Rigip
 Baumeister  → Mauerwerk, Beton, Estrich, Verputz, Innen-/Außenputz
 Fliesenleger→ Fliesen, Keramik, Mosaik, Naturstein verlegen
 Bodenleger  → Parkett, Laminat, Vinyl, Teppich
-Bautischler → Holztüren, Zargen, Einbauschränke
-Glaser      → Glasscheiben, Verglasung, Glasduschwände, Spiegel
-Elektriker  → Elektroinstallation, Steckdosen, Leitungen, Leuchten
-Installateur→ Sanitär, Heizung, Rohre, WC, Waschbecken
-Reinigung   → Endreinigung, Grundreinigung
-WICHTIG: Spachteltechnik/Wandanstrich/Lasur → IMMER Maler. Gipskarton → IMMER Trockenbau.
+Gemeinkosten → Bauleitung, Baustelleneinrichtung, An-/Abfahrt, Transport
+Abbruch      → Demontage, Rückbau, Stemmen, Entsorgung, Container
+Installateur → Sanitär, Heizung, Lüftung, Wasser, Abwasser, Rohre, WC, Armaturen, Heizkörper, Fußbodenheizung, Wärmepumpen
+Reinigung    → Endreinigung, Grundreinigung
+WICHTIG: Es gibt NUR 4 Gewerke. Alles was nicht Gemeinkosten/Abbruch/Reinigung ist → Installateur!
 
 STUNDENSÄTZE (aus aktiver Preisliste):
 ${STUNDENSAETZE_PLACEHOLDER}

@@ -9,10 +9,7 @@
  */
 
 const GEWERK_PREFIX = {
-  'Gemeinkosten': '01', 'Abbruch': '02', 'Bautischler': '03', 'Glaser': '04',
-  'Elektriker': '05', 'Installateur': '06', 'Baumeister': '07', 'Trockenbau': '08',
-  'Maler': '09', 'Anstreicher': '10', 'Fliesenleger': '11', 'Bodenleger': '12',
-  'Reinigung': '13', 'Elektrozuleitung': '16',
+  'Gemeinkosten': '01', 'Abbruch': '02', 'Installateur': '06', 'Reinigung': '13',
 }
 
 /**

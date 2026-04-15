@@ -3,18 +3,8 @@ import * as XLSX from 'xlsx'
 const GEWERK_PREFIX = {
   '01': 'Gemeinkosten',
   '02': 'Abbruch',
-  '03': 'Bautischler',
-  '04': 'Glaser',
-  '05': 'Elektriker',
   '06': 'Installateur',
-  '07': 'Baumeister',
-  '08': 'Trockenbau',
-  '09': 'Maler',
-  '10': 'Anstreicher',
-  '11': 'Fliesenleger',
-  '12': 'Bodenleger',
   '13': 'Reinigung',
-  '16': 'Elektrozuleitung',
 }
 
 function getGewerkFromNr(nr) {

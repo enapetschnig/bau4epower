@@ -9,17 +9,7 @@ export const MODEL = 'claude-sonnet-4-20250514'
 export const GEWERKE_REIHENFOLGE = [
   'Gemeinkosten',
   'Abbruch',
-  'Bautischler',
-  'Glaser',
-  'Elektriker',
   'Installateur',
-  'Baumeister',
-  'Trockenbau',
-  'Maler',
-  'Anstreicher',
-  'Fliesenleger',
-  'Bodenleger',
-  'Elektrozuleitung',
   'Reinigung',
 ]
 
@@ -490,10 +480,7 @@ export async function callClaudeWithCacheAndImages(systemPrompt, cachedText, use
 }
 
 const GEWERK_PREFIX_MAP = {
-  'Gemeinkosten': '01', 'Abbruch': '02', 'Bautischler': '03', 'Glaser': '04',
-  'Elektriker': '05', 'Installateur': '06', 'Baumeister': '07', 'Trockenbau': '08',
-  'Maler': '09', 'Anstreicher': '10', 'Fliesenleger': '11', 'Bodenleger': '12',
-  'Reinigung': '13', 'Elektrozuleitung': '16',
+  'Gemeinkosten': '01', 'Abbruch': '02', 'Installateur': '06', 'Reinigung': '13',
 }
 
 const VALID_LEISTUNGSNR = /^\d{2}-(\d{3,}|NEU\d*)$/
