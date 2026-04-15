@@ -91,7 +91,7 @@ export async function generateAngebotPdf({
   // ── Seite 1: Header ──
   drawAngebotHeader(doc, ctx, true)
 
-  let y = 72 // Start nach Header-Block (weniger Abstand nach E-Mail-Zeile)
+  let y = 80 // Start nach Header-Block + Kundenadresse (genug Abstand)
 
   // ── Angebots-Titel (fett, 11pt) ──
   doc.setFont('helvetica', 'bold')
@@ -390,8 +390,8 @@ function drawAngebotHeader(doc, ctx, isFirstPage) {
   doc.setTextColor(...COLOR_BLACK)
   doc.text(COMPANY.email, rx, ry, { align: 'right' })
 
-  // ── Trennlinie unter Logo
-  const lineY = MT + LOGO_H + 4
+  // ── Trennlinie knapp unter Logo
+  const lineY = MT + LOGO_H + 1
   doc.setDrawColor(...COLOR_PRIMARY)
   doc.setLineWidth(0.5)
   doc.line(ML, lineY, pageW - MR, lineY)
