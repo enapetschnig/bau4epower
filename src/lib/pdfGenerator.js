@@ -36,8 +36,8 @@ const FONT_FOOTER = 7
 const LINE_H = 4.2   // Zeilenabstand normal
 
 // Logo-Dimensionen (2048x2048px → Ratio 1:1, quadratisch)
-const LOGO_W = 22
-const LOGO_H = 22
+const LOGO_W = 30
+const LOGO_H = 30
 
 // ── Hilfsfunktionen ──────────────────────────────────────────────────────────
 function fmt(val) {
@@ -337,43 +337,83 @@ export async function generateAngebotPdf({
   return doc.output('blob')
 }
 
-// ── Angebot Header (exakt wie Hero-Vorlage) ─────────────────────────────────
+// ── Angebot Header – Professionelles Handwerker-Layout ───────────────────────
 function drawAngebotHeader(doc, ctx, isFirstPage) {
   const pageW = doc.internal.pageSize.getWidth() // 210
-  const { logo, projektnummer, datum, userName, empfaenger, adresse } = ctx
+  const { logo, projektnummer, datum, userName, adresse } = ctx
 
-  if (!isFirstPage) return // Folgeseiten: kein Header
+  if (!isFirstPage) return
 
-  // Logo rechts oben – korrekte Proportionen (600:201 = 2.985:1)
+  // ── Logo oben links (groß)
   if (logo) {
     try {
-      doc.addImage(logo, 'PNG', pageW - MR - LOGO_W, MT, LOGO_W, LOGO_H)
+      doc.addImage(logo, 'PNG', ML, MT, LOGO_W, LOGO_H)
     } catch { /* ignore */ }
   }
 
-  // Projektinfo-Block rechts (unter Logo, wie Hero)
-  const infoX = pageW - MR           // 195 = rechter Rand für Werte
-  const labelX = pageW - MR - 65     // 130 = Labels näher an Werte (weniger Abstand)
-  let iy = MT + LOGO_H + 10          // ~36.4 = mehr Abstand unter dem Logo
+  // ── Firmeninfos rechts neben Logo
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(11)
+  doc.setTextColor(...COLOR_PRIMARY)
+  doc.text(COMPANY.name, pageW - MR, MT + 5, { align: 'right' })
 
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(FONT_BODY)
-  doc.setTextColor(...COLOR_BLACK)
+  doc.setFontSize(7.5)
+  doc.setTextColor(...COLOR_GRAY)
+  let ry = MT + 10
+  if (COMPANY.street) { doc.text(COMPANY.street, pageW - MR, ry, { align: 'right' }); ry += 3.5 }
+  doc.text(COMPANY.city, pageW - MR, ry, { align: 'right' }); ry += 3.5
+  if (COMPANY.email) { doc.text(COMPANY.email, pageW - MR, ry, { align: 'right' }); ry += 3.5 }
+  if (COMPANY.mobil) { doc.text(COMPANY.mobil, pageW - MR, ry, { align: 'right' }) }
 
-  const infoRows = [
-    ['Projektnummer', projektnummer || '–'],
-    ['Datum', datum || '–'],
-    ['Ansprechpartner', userName || 'Christoph Napetschnig'],
-    ['Mobil', COMPANY.mobil],
-    ['E-Mail', COMPANY.email],
-  ]
-  for (const [label, value] of infoRows) {
-    doc.text(label, labelX, iy)
-    doc.text(String(value), infoX, iy, { align: 'right' })
-    iy += 5
+  // ── Trennlinie
+  const lineY = MT + LOGO_H + 4
+  doc.setDrawColor(...COLOR_PRIMARY)
+  doc.setLineWidth(0.6)
+  doc.line(ML, lineY, pageW - MR, lineY)
+
+  // ── Kundenanschrift links (unter Trennlinie)
+  let cy = lineY + 8
+  if (projektnummer) {
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(FONT_BODY)
+    doc.setTextColor(...COLOR_BLACK)
+    doc.text(projektnummer, ML, cy)
+    cy += 5
+  }
+  if (adresse) {
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(FONT_BODY)
+    doc.setTextColor(...COLOR_DARK)
+    const addrLines = doc.splitTextToSize(adresse, 80)
+    doc.text(addrLines, ML, cy)
+    cy += addrLines.length * 4
   }
 
-  // Kein Empfänger-Block links – Adresse steht bereits im Angebots-Titel (Betrifft)
+  // ── Angebotsdaten rechts (unter Trennlinie)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(FONT_SMALL)
+  doc.setTextColor(...COLOR_GRAY)
+  let iy = lineY + 8
+  const infoX = pageW - MR
+
+  doc.text('Datum', infoX - 35, iy)
+  doc.setTextColor(...COLOR_BLACK)
+  doc.text(datum || '–', infoX, iy, { align: 'right' })
+  iy += 4.5
+
+  doc.setTextColor(...COLOR_GRAY)
+  doc.text('Ansprechpartner', infoX - 35, iy)
+  doc.setTextColor(...COLOR_BLACK)
+  doc.text(userName || COMPANY.gf, infoX, iy, { align: 'right' })
+  iy += 4.5
+
+  if (COMPANY.email) {
+    doc.setTextColor(...COLOR_GRAY)
+    doc.text('E-Mail', infoX - 35, iy)
+    doc.setTextColor(...COLOR_BLACK)
+    doc.text(COMPANY.email, infoX, iy, { align: 'right' })
+  }
 }
 
 // ── Angebot Footer (Hero-Vorlage, OHNE Angebotsnummer links) ────────────────

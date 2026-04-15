@@ -25,8 +25,8 @@ const ADRESSE_STREET_RE = /((?:[\wäöüßÄÖÜ-]+\s+){0,3}[\wäöüßÄÖÜ-]*
 // Betrifft detection
 const BETRIFFT_RE = /(?:betrifft|es\s+geht\s+um|geht\s+um)\s+(?:ist\s+|sind\s+|lautet\s+|:\s*)?([^,.!?\n]+)/i
 
-// Projektnummer detection – handles "Projektnummer", "Projekt Nummer", "Projekt Nr.", "Hero Nr.", "P-Nr."
-const PROJEKTNUMMER_RE = /(?:(?:hero\s+)?projekt(?:\s*nummer)?(?:\s*[-.\s]?nr\.?)?|p[-.\s]?nr\.?|hero\s+nr\.?)\s*:?\s*(?:ist|lautet|number|#)?\s*([^\s.,!?\n•]+)/i
+// Projektnummer/Kunde detection – handles "Projektnummer", "Kunde", "Kundenname", "Projekt Nr.", "Hero Nr.", "P-Nr."
+const PROJEKTNUMMER_RE = /(?:(?:hero\s+)?projekt(?:\s*nummer)?(?:\s*[-.\s]?nr\.?)?|p[-.\s]?nr\.?|hero\s+nr\.?|kunden?\s*name?|kunde)\s*:?\s*(?:ist|lautet|number|#|heißt)?\s*(.+?)(?:\.|,\s*(?:adresse|betrifft)|$)/im
 
 // Phrases to ignore as bullet points
 const IGNORE_BULLET_RE = /^ich\s+(brauche|möchte|hätte\s+gern|will)\s+ein\s+angebot|^ein\s+angebot\s+(für|bitte)|^angebot\s+für/i
@@ -131,14 +131,14 @@ function extractFields(text) {
 function parseTemplateToFields(text) {
   if (!text.trim()) return { projektnummer: '', adresse: '', betrifft: '', positionen: '' }
 
-  const pnrLineMatch = text.match(/^Projektnummer:\s*(.+)$/m)
+  const pnrLineMatch = text.match(/^(?:Projektnummer|Kunde):\s*(.+)$/m)
   const pnrRawMatch = !pnrLineMatch ? text.match(PROJEKTNUMMER_RE) : null
   const adresseMatch = text.match(/^Adresse:\s*(.+)$/m)
   const betrifftMatch = text.match(/^Betrifft:\s*(.+)$/m)
 
-  // Alle Meta-Zeilen (Projektnummer, Adresse, Betrifft) entfernen → Rest = Positionen
+  // Alle Meta-Zeilen entfernen → Rest = Positionen
   const metaPatterns = [
-    /^Projektnummer:\s*.+$/m,
+    /^(?:Projektnummer|Kunde):\s*.+$/m,
     /^Adresse:\s*.+$/m,
     /^Betrifft:\s*.+$/m,
   ]
@@ -164,9 +164,10 @@ function parseTemplateToFields(text) {
 /**
  * Assembles the 4 fields into a single API-ready text string.
  */
-function assembleText(projektnummer, adresse, betrifft, positionen) {
+function assembleText(projektnummer, adresse, betrifft, positionen, projektnummerFieldLabel) {
   const lines = []
-  if (projektnummer.trim()) lines.push(`Projektnummer: ${projektnummer.trim()}`)
+  const fieldName = projektnummerFieldLabel || 'Projektnummer'
+  if (projektnummer.trim()) lines.push(`${fieldName}: ${projektnummer.trim()}`)
   if (adresse.trim()) lines.push(`Adresse: ${adresse.trim()}`)
   if (betrifft.trim()) lines.push(`Betrifft: ${betrifft.trim()}`)
   if (lines.length > 0 && positionen.trim()) lines.push('')
@@ -183,6 +184,7 @@ export default function SpeechInput({
   showPositionTipp = false,
   showGrossTipp = false,
   enableBullets = true,
+  projektnummerLabel,
   positionenLabel,
   positionenPlaceholder,
   initialValue,
@@ -228,7 +230,7 @@ export default function SpeechInput({
   // ── Notify parent of content changes ─────────────────────
   useEffect(() => {
     if (enableBullets) {
-      onTextChange?.(assembleText(projektnummer, adresse, betrifft, positionen))
+      onTextChange?.(assembleText(projektnummer, adresse, betrifft, positionen, projektnummerLabel))
     } else {
       onTextChange?.(transcript)
     }
@@ -587,7 +589,7 @@ export default function SpeechInput({
   // ── Submit ────────────────────────────────────────────────
   function handleSubmit() {
     const text = enableBullets
-      ? assembleText(projektnummer, adresse, betrifft, positionen).trim()
+      ? assembleText(projektnummer, adresse, betrifft, positionen, projektnummerLabel).trim()
       : transcript.trim()
     if (!text) return
     onResult(text)
@@ -596,7 +598,7 @@ export default function SpeechInput({
   const supported = USE_WHISPER ? !!navigator.mediaDevices : webSpeechSupported
   const busy = isTranscribing
   const hasContent = enableBullets
-    ? assembleText(projektnummer, adresse, betrifft, positionen).trim().length > 0
+    ? assembleText(projektnummer, adresse, betrifft, positionen, projektnummerLabel).trim().length > 0
     : transcript.trim().length > 0
 
   return (
@@ -629,7 +631,7 @@ export default function SpeechInput({
         </p>
         {showPositionTipp && !isTranscribing && enableBullets && (
           <p className="text-[11px] text-gray-400 text-center leading-relaxed px-2">
-            Sag <strong className="text-gray-500">"Projektnummer"</strong>, <strong className="text-gray-500">"Adresse"</strong>, <strong className="text-gray-500">"Betrifft"</strong> – Felder füllen sich automatisch.
+            Sag <strong className="text-gray-500">"Kunde"</strong>, <strong className="text-gray-500">"Adresse"</strong>, <strong className="text-gray-500">"Betrifft"</strong> – Felder füllen sich automatisch.
             Trennwort: <strong className="text-gray-500">"nächste Position"</strong>
           </p>
         )}
@@ -651,12 +653,12 @@ export default function SpeechInput({
         /* ── New: 4-field layout ── */
         <div className="space-y-2">
           <div>
-            <label className="label block mb-0.5">Projektnummer</label>
+            <label className="label block mb-0.5">{projektnummerLabel || 'Projektnummer'}</label>
             <input
               className="input-field"
               value={projektnummer}
               onChange={e => setProjektnummer(e.target.value)}
-              placeholder="z.B. 100"
+              placeholder={projektnummerLabel === 'Kunde' ? 'z.B. Familie Müller' : 'z.B. 100'}
               disabled={disabled}
             />
           </div>

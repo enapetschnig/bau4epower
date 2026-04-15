@@ -147,14 +147,14 @@ function extractAdresse(text) {
 // Matches: "Projekt: 100", "Projektnummer: 100", "Projekt Nummer 100",
 //          "Projekt 100", "Hero Projektnummer 100", "Projekt Nr. 1234", "2024-0815"
 // Captures number or alphanumeric ID (e.g. "2024-0815")
-const PROJEKTNUMMER_RE = /(?:hero\s+)?projekt(?:\s*(?:nummer|nr\.?|number))?\s*[:\.]?\s*([\dA-Za-z][\dA-Za-z-]{1,19})/i
+const PROJEKTNUMMER_RE = /(?:(?:hero\s+)?projekt(?:\s*(?:nummer|nr\.?|number))?|kunden?\s*name?|kunde)\s*[:\.]?\s*(.+?)(?:\.|,\s*(?:adresse|betrifft)|$)/im
 function extractProjektnummer(text) {
   if (!text) return ''
-  // Priority 1: exact "Projektnummer: XYZ" line (from SpeechInput assembled text or template)
-  const lineMatch = text.match(/^Projektnummer:\s*(.+)$/m)
+  // Priority 1: exact "Kunde: XYZ" or "Projektnummer: XYZ" line
+  const lineMatch = text.match(/^(?:Kunde|Projektnummer):\s*(.+)$/m)
   if (lineMatch) return lineMatch[1].trim()
   // Priority 2: free-text regex
-  const m = text.match(PROJEKTNUMMER_RE) || text.match(/^(\d{2,6})[.,]?\s/i)
+  const m = text.match(PROJEKTNUMMER_RE)
   return m ? m[1].trim() : ''
 }
 
@@ -891,6 +891,7 @@ export default function KleinesAngebot({ loadOfferId = null }) {
           onResult={handleSpeechResult}
           onError={msg => showToast(msg, 'error')}
           showPositionTipp
+          projektnummerLabel="Kunde"
           initialValue={templateInitialValue}
           disabled={loading || editLoading || addingPosition}
           onTextChange={setInputText}

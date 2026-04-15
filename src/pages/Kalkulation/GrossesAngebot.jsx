@@ -145,17 +145,15 @@ function extractAdresse(text) {
   return null
 }
 
-const PROJEKTNUMMER_RE = /(?:hero\s+)?projekt(?:\s*(?:nummer|nr\.?|number))?\s*[:\.]?\s*([\dA-Za-z][\dA-Za-z-]{1,19})/i
+const PROJEKTNUMMER_RE = /(?:(?:hero\s+)?projekt(?:\s*(?:nummer|nr\.?|number))?|kunden?\s*name?|kunde)\s*[:\.]?\s*(.+?)(?:\.|,\s*(?:adresse|betrifft)|$)/im
 function extractProjektnummer(text) {
   if (!text) return ''
-  // Priority 1: exact "Projektnummer: XYZ" line (from SpeechInput assembled text or template)
-  const lineMatch = text.match(/^Projektnummer:\s*(.+)$/m)
+  // Priority 1: exact "Kunde: XYZ" or "Projektnummer: XYZ" line
+  const lineMatch = text.match(/^(?:Kunde|Projektnummer):\s*(.+)$/m)
   if (lineMatch) return lineMatch[1].trim()
   // Priority 2: free-text regex
-  const m = text.match(PROJEKTNUMMER_RE) || text.match(/^(\d[\d.\-/]*)[.,]?\s/i)
-  const val = m ? m[1].replace(/[.,!?]+$/, '').trim() : ''
-  if (/^[a-zäöü]+$/i.test(val) && !/^\d/.test(val)) return ''
-  return val
+  const m = text.match(PROJEKTNUMMER_RE)
+  return m ? m[1].trim() : ''
 }
 
 /**
@@ -942,6 +940,7 @@ NUR JSON, keine Erklärung.`
                 key={templateKey}
                 onResult={handleAddEntry}
                 onError={msg => showToast(msg, 'error')}
+                projektnummerLabel="Kunde"
                 initialValue={templateInitialValue}
                 disabled={loading}
                 showGrossTipp={!hasEntries}

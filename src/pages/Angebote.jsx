@@ -124,8 +124,8 @@ export default function Angebote({ embedded = false }) {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0 space-y-0.5">
                       {offer.hero_projektnummer && (
-                        <p className="text-xs font-mono font-semibold text-primary">
-                          Projekt {offer.hero_projektnummer}
+                        <p className="text-xs font-semibold text-primary">
+                          {offer.hero_projektnummer}
                         </p>
                       )}
                       {adresse && (
