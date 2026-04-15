@@ -91,7 +91,7 @@ export async function generateAngebotPdf({
   // ── Seite 1: Header ──
   drawAngebotHeader(doc, ctx, true)
 
-  let y = 80 // Start nach Header-Block + Kundenadresse (genug Abstand)
+  let y = 88 // Start nach Header-Block + Kundenadresse (genug Abstand)
 
   // ── Angebots-Titel (fett, 11pt) ──
   doc.setFont('helvetica', 'bold')
