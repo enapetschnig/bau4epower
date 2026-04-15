@@ -5,9 +5,9 @@ import autoTable from 'jspdf-autotable'
 const COMPANY = {
   name: 'epower GmbH',
   brand: 'epower GmbH',
-  street: '',
-  city: 'Wien',
-  plz: 'Wien',
+  street: 'Frojacher Straße 5',
+  city: '8841 Frojach',
+  plz: '8841 Frojach',
   gf: 'Christoph Napetschnig',
   steuernr: '',
   uid: '',
@@ -351,68 +351,78 @@ function drawAngebotHeader(doc, ctx, isFirstPage) {
     } catch { /* ignore */ }
   }
 
-  // ── Firmeninfos rechts neben Logo
+  // ── Rechte Spalte: Firmenname, Adresse, dann Angebotsdaten
+  const rx = pageW - MR // rechter Rand
+  let ry = MT + 4
+
+  // Firmenname
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(11)
   doc.setTextColor(...COLOR_PRIMARY)
-  doc.text(COMPANY.name, pageW - MR, MT + 5, { align: 'right' })
+  doc.text(COMPANY.name, rx, ry, { align: 'right' })
+  ry += 4.5
 
+  // Firmenadresse
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(7.5)
   doc.setTextColor(...COLOR_GRAY)
-  let ry = MT + 10
-  if (COMPANY.street) { doc.text(COMPANY.street, pageW - MR, ry, { align: 'right' }); ry += 3.5 }
-  doc.text(COMPANY.city, pageW - MR, ry, { align: 'right' }); ry += 3.5
-  if (COMPANY.email) { doc.text(COMPANY.email, pageW - MR, ry, { align: 'right' }); ry += 3.5 }
-  if (COMPANY.mobil) { doc.text(COMPANY.mobil, pageW - MR, ry, { align: 'right' }) }
+  doc.text(COMPANY.street, rx, ry, { align: 'right' }); ry += 3.2
+  doc.text(COMPANY.city, rx, ry, { align: 'right' }); ry += 3.2
+  doc.text(COMPANY.email, rx, ry, { align: 'right' }); ry += 5
 
-  // ── Trennlinie
+  // Datum
+  doc.setFontSize(FONT_SMALL)
+  doc.setTextColor(...COLOR_GRAY)
+  doc.text('Datum:', rx - 30, ry)
+  doc.setTextColor(...COLOR_BLACK)
+  doc.text(datum || '–', rx, ry, { align: 'right' }); ry += 3.8
+
+  // Ansprechpartner
+  doc.setTextColor(...COLOR_GRAY)
+  doc.text('Ansprechpartner:', rx - 30, ry)
+  doc.setTextColor(...COLOR_BLACK)
+  doc.text(userName || COMPANY.gf, rx, ry, { align: 'right' }); ry += 3.8
+
+  // E-Mail
+  doc.setTextColor(...COLOR_GRAY)
+  doc.text('E-Mail:', rx - 30, ry)
+  doc.setTextColor(...COLOR_BLACK)
+  doc.text(COMPANY.email, rx, ry, { align: 'right' })
+
+  // ── Trennlinie unter Logo
   const lineY = MT + LOGO_H + 4
   doc.setDrawColor(...COLOR_PRIMARY)
-  doc.setLineWidth(0.6)
+  doc.setLineWidth(0.5)
   doc.line(ML, lineY, pageW - MR, lineY)
 
-  // ── Kundenanschrift links (unter Trennlinie)
-  let cy = lineY + 8
+  // ── Kundenanschrift links unter Trennlinie (Zeile für Zeile)
+  let cy = lineY + 7
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(7)
+  doc.setTextColor(...COLOR_GRAY)
+  doc.text('An:', ML, cy)
+  cy += 4
+
   if (projektnummer) {
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(FONT_BODY)
     doc.setTextColor(...COLOR_BLACK)
     doc.text(projektnummer, ML, cy)
-    cy += 5
+    cy += 4.5
   }
+
   if (adresse) {
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(FONT_BODY)
     doc.setTextColor(...COLOR_DARK)
-    const addrLines = doc.splitTextToSize(adresse, 80)
-    doc.text(addrLines, ML, cy)
-    cy += addrLines.length * 4
-  }
-
-  // ── Angebotsdaten rechts (unter Trennlinie)
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(FONT_SMALL)
-  doc.setTextColor(...COLOR_GRAY)
-  let iy = lineY + 8
-  const infoX = pageW - MR
-
-  doc.text('Datum', infoX - 35, iy)
-  doc.setTextColor(...COLOR_BLACK)
-  doc.text(datum || '–', infoX, iy, { align: 'right' })
-  iy += 4.5
-
-  doc.setTextColor(...COLOR_GRAY)
-  doc.text('Ansprechpartner', infoX - 35, iy)
-  doc.setTextColor(...COLOR_BLACK)
-  doc.text(userName || COMPANY.gf, infoX, iy, { align: 'right' })
-  iy += 4.5
-
-  if (COMPANY.email) {
-    doc.setTextColor(...COLOR_GRAY)
-    doc.text('E-Mail', infoX - 35, iy)
-    doc.setTextColor(...COLOR_BLACK)
-    doc.text(COMPANY.email, infoX, iy, { align: 'right' })
+    // Adresse zeilenweise: Straße und PLZ/Ort getrennt
+    // Versuche "Straße Nr, PLZ Ort" zu splitten
+    const parts = adresse.split(/,\s*/)
+    for (const part of parts) {
+      doc.text(part.trim(), ML, cy)
+      cy += 4.2
+    }
   }
 }
 
