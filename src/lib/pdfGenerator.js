@@ -36,8 +36,8 @@ const FONT_FOOTER = 7
 const LINE_H = 4.2   // Zeilenabstand normal
 
 // Logo-Dimensionen (2048x2048px → Ratio 1:1, quadratisch)
-const LOGO_W = 30
-const LOGO_H = 30
+const LOGO_W = 38
+const LOGO_H = 38
 
 // ── Hilfsfunktionen ──────────────────────────────────────────────────────────
 function fmt(val) {
@@ -97,7 +97,7 @@ export async function generateAngebotPdf({
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(11)
   doc.setTextColor(...COLOR_BLACK)
-  const titleText = `Angebot: ${betrifft || ''}${adresse ? ', ' + adresse : ''}`
+  const titleText = `Angebot: ${betrifft || 'Installationsarbeiten'}`
   const titleLines = doc.splitTextToSize(titleText, contentW)
   doc.text(titleLines, ML, y)
   y += titleLines.length * 5 + 3
@@ -353,6 +353,7 @@ function drawAngebotHeader(doc, ctx, isFirstPage) {
 
   // ── Rechte Spalte: Firmenname, Adresse, dann Angebotsdaten
   const rx = pageW - MR // rechter Rand
+  const rlabel = pageW / 2 + 10 // Labels starten ab Seitenmitte + 10mm
   let ry = MT + 4
 
   // Firmenname
@@ -368,24 +369,24 @@ function drawAngebotHeader(doc, ctx, isFirstPage) {
   doc.setTextColor(...COLOR_GRAY)
   doc.text(COMPANY.street, rx, ry, { align: 'right' }); ry += 3.2
   doc.text(COMPANY.city, rx, ry, { align: 'right' }); ry += 3.2
-  doc.text(COMPANY.email, rx, ry, { align: 'right' }); ry += 5
+  doc.text(COMPANY.email, rx, ry, { align: 'right' }); ry += 6
 
   // Datum
   doc.setFontSize(FONT_SMALL)
   doc.setTextColor(...COLOR_GRAY)
-  doc.text('Datum:', rx - 30, ry)
+  doc.text('Datum:', rlabel, ry)
   doc.setTextColor(...COLOR_BLACK)
   doc.text(datum || '–', rx, ry, { align: 'right' }); ry += 3.8
 
   // Ansprechpartner
   doc.setTextColor(...COLOR_GRAY)
-  doc.text('Ansprechpartner:', rx - 30, ry)
+  doc.text('Ansprechpartner:', rlabel, ry)
   doc.setTextColor(...COLOR_BLACK)
   doc.text(userName || COMPANY.gf, rx, ry, { align: 'right' }); ry += 3.8
 
   // E-Mail
   doc.setTextColor(...COLOR_GRAY)
-  doc.text('E-Mail:', rx - 30, ry)
+  doc.text('E-Mail:', rlabel, ry)
   doc.setTextColor(...COLOR_BLACK)
   doc.text(COMPANY.email, rx, ry, { align: 'right' })
 
