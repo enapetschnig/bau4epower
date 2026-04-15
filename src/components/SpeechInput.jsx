@@ -600,51 +600,44 @@ export default function SpeechInput({
     : transcript.trim().length > 0
 
   return (
-    <div className="card space-y-4">
+    <div className="card space-y-3">
       {/* ── Mic Button ── */}
-      <div className="flex flex-col items-center gap-3 py-3">
+      <div className="flex flex-col items-center gap-2 py-2">
         <button
           onClick={toggleRecording}
           disabled={!supported || isTranscribing || disabled}
-          className={`w-20 h-20 rounded-full flex items-center justify-center transition-all duration-200
+          className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-200
             ${isRecording
               ? 'bg-primary text-white pulse-mic scale-105'
-              : 'bg-primary text-white shadow-lg active:scale-95'
+              : 'bg-primary text-white shadow-md active:scale-95'
             }
             ${(!supported || isTranscribing) ? 'opacity-40 cursor-not-allowed' : ''}
           `}
         >
           {isTranscribing
-            ? <SpinnerGap size={36} weight="bold" className="animate-spin" />
+            ? <SpinnerGap size={28} weight="bold" className="animate-spin" />
             : isRecording
-            ? <Stop size={32} weight="fill" />
-            : <Microphone size={36} weight="regular" />
+            ? <Stop size={24} weight="fill" />
+            : <Microphone size={28} weight="regular" />
           }
         </button>
-        <p className="text-sm text-gray-500 text-center">
+        <p className="text-[12px] text-gray-400 text-center">
           {!supported ? 'Spracheingabe nicht verfügbar' :
            isTranscribing ? 'Wird transkribiert...' :
-           isRecording ? 'Aufnahme läuft – Stop drücken zum Beenden' :
+           isRecording ? 'Aufnahme läuft – Stop drücken' :
            'Mikrofon drücken zum Sprechen'}
         </p>
         {showPositionTipp && !isTranscribing && enableBullets && (
-          <div className="text-xs text-gray-400 italic text-justify w-full leading-relaxed space-y-2">
-            <p>
-              Tipp: Sprechen Sie <span className="font-medium not-italic text-gray-500">"Projektnummer: …"</span>, <span className="font-medium not-italic text-gray-500">"Adresse: …"</span> und <span className="font-medium not-italic text-gray-500">"Betrifft: …"</span> – die Felder werden automatisch ausgefüllt.
-              Trennwort für neue Positionen: <span className="font-medium not-italic text-gray-500">"nächste Position"</span>.
-              Für Zusatzinfos: <span className="font-medium not-italic text-gray-500">"Ergänzung: …"</span> oder <span className="font-medium not-italic text-gray-500">"Hinweis: …"</span> – wird automatisch in die jeweilige Liste eingetragen.
-            </p>
-          </div>
+          <p className="text-[11px] text-gray-400 text-center leading-relaxed px-2">
+            Sag <strong className="text-gray-500">"Projektnummer"</strong>, <strong className="text-gray-500">"Adresse"</strong>, <strong className="text-gray-500">"Betrifft"</strong> – Felder füllen sich automatisch.
+            Trennwort: <strong className="text-gray-500">"nächste Position"</strong>
+          </p>
         )}
         {showGrossTipp && !isTranscribing && (
-          <div className="text-xs text-gray-400 italic text-justify w-full leading-relaxed space-y-2">
-            <p>
-              Tipp: Beim ersten Gewerk <span className="font-medium not-italic text-gray-500">"Projektnummer: …"</span>, <span className="font-medium not-italic text-gray-500">"Adresse: …"</span> und <span className="font-medium not-italic text-gray-500">"Betrifft: …"</span> mitsprechen.
-              Jedes Gewerk einzeln ansagen, z.B. <span className="font-medium not-italic text-gray-500">"Gewerk Maler: Wände streichen 50m², Decke streichen 25m²"</span>.
-              Trennwort für Positionen innerhalb eines Gewerks: <span className="font-medium not-italic text-gray-500">"nächste Position"</span>.
-              Für Zusatzinfos: <span className="font-medium not-italic text-gray-500">"Ergänzung: …"</span> oder <span className="font-medium not-italic text-gray-500">"Hinweis: …"</span> – wird automatisch zugeordnet.
-            </p>
-          </div>
+          <p className="text-[11px] text-gray-400 text-center leading-relaxed px-2">
+            Gewerk einzeln ansagen, z.B. <strong className="text-gray-500">"Gewerk Installateur: WC montieren, Waschtisch anschließen"</strong>.
+            Trennwort: <strong className="text-gray-500">"nächste Position"</strong>
+          </p>
         )}
       </div>
 
@@ -656,9 +649,9 @@ export default function SpeechInput({
 
       {enableBullets ? (
         /* ── New: 4-field layout ── */
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div>
-            <label className="label block mb-1">Projektnummer</label>
+            <label className="label block mb-0.5">Projektnummer</label>
             <input
               className="input-field"
               value={projektnummer}
@@ -728,7 +721,7 @@ export default function SpeechInput({
           className="btn-primary w-full"
           disabled={!hasContent || busy || isRecording || isEnrichingAdresse || disabled}
         >
-          <Lightning size={20} weight="fill" />
+          <Lightning size={16} weight="fill" />
           {submitLabel}
         </button>
       </div>

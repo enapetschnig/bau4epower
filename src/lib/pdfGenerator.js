@@ -3,8 +3,8 @@ import autoTable from 'jspdf-autotable'
 
 // ── Unternehmensinfos ────────────────────────────────────────────────────────
 const COMPANY = {
-  name: 'NAPETSCHNIG.',
-  brand: 'NAPETSCHNIG.',
+  name: 'epower GmbH',
+  brand: 'epower GmbH',
   street: '',
   city: 'Wien',
   plz: 'Wien',
@@ -15,7 +15,7 @@ const COMPANY = {
   bic: '',
   bank: '',
   mobil: '',
-  email: 'napetschnig.chris@gmail.com',
+  email: 'hallo@epowergmbh.at',
 }
 
 const COLOR_PRIMARY = [58, 58, 58]    // #3a3a3a
@@ -35,9 +35,9 @@ const FONT_SMALL = 8
 const FONT_FOOTER = 7
 const LINE_H = 4.2   // Zeilenabstand normal
 
-// Logo-Dimensionen (1000x138px → Ratio 7.25:1)
-const LOGO_W = 55
-const LOGO_H = 7.6   // = 55 / 7.25, Seitenverhältnis erhalten
+// Logo-Dimensionen (2048x2048px → Ratio 1:1, quadratisch)
+const LOGO_W = 22
+const LOGO_H = 22
 
 // ── Hilfsfunktionen ──────────────────────────────────────────────────────────
 function fmt(val) {
@@ -55,7 +55,7 @@ function fmtMenge(val) {
 
 async function loadLogoBase64() {
   try {
-    const res = await fetch('/logo-napetschnig.png')
+    const res = await fetch('/logo-epower.png')
     const blob = await res.blob()
     return new Promise(resolve => {
       const reader = new FileReader()
@@ -325,7 +325,7 @@ export async function generateAngebotPdf({
   doc.text('Christoph Napetschnig', ML, y)
   y += LINE_H + 1
   doc.setFont('helvetica', 'normal')
-  doc.text('Geschäftsführer / NAPETSCHNIG.', ML, y)
+  doc.text('Geschäftsführer / epower GmbH', ML, y)
 
   // ── Footer auf allen Seiten ──
   const totalPages = doc.internal.getNumberOfPages()
@@ -420,7 +420,7 @@ function drawProtoHeader(doc, { logo, projektnummer, datum, userName, userEmail,
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(8.5)
   doc.setTextColor(...COLOR_DARK)
-  doc.text('NAPETSCHNIG.', pageW - 15, 31, { align: 'right' })
+  doc.text('epower GmbH', pageW - 15, 31, { align: 'right' })
 
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(7.5)
@@ -457,7 +457,7 @@ function drawProtoFooter(doc, pageNum, totalPages) {
   doc.setFontSize(6.5)
   doc.setTextColor(...COLOR_GRAY)
   const cx = pageW / 2
-  doc.text(`NAPETSCHNIG. | ${COMPANY.city} | Geschäftsführer: ${COMPANY.gf}`, cx, fy + 5, { align: 'center' })
+  doc.text(`epower GmbH | ${COMPANY.city} | Geschäftsführer: ${COMPANY.gf}`, cx, fy + 5, { align: 'center' })
   doc.text(`Steuernummer: ${COMPANY.steuernr} | USt-IdNr.: ${COMPANY.uid}`, cx, fy + 10, { align: 'center' })
   doc.text(`${COMPANY.bank} | IBAN: ${COMPANY.iban} | BIC: ${COMPANY.bic}`, cx, fy + 15, { align: 'center' })
   doc.setFontSize(7)

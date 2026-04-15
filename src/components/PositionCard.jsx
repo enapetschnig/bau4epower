@@ -23,24 +23,24 @@ export default function PositionCard({ position, onDelete, showDeleteButton = fa
 
   return (
     <div id={positionId} className="card" style={{
-      border: isUnsicher ? '3px solid #e74c3c' : '2px solid #3a3a3a',
-      borderRadius: '12px',
+      border: isUnsicher ? '2px solid #e74c3c' : '1px solid #e5e7eb',
+      borderRadius: '8px',
       ...(isUnsicher ? { animation: 'unsicherBorder 1.5s ease-in-out infinite alternate', backgroundColor: '#fef2f2' } : {}),
     }}>
       {/* Header */}
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex items-start justify-between mb-2">
         <div className="flex-1 min-w-0 mr-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-md">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="bg-primary text-white text-[10px] font-bold px-1.5 py-px rounded">
               {position.leistungsnummer}
             </span>
             {position.aus_preisliste ? (
-              <span className="bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-md">
-                aus Katalog
+              <span className="bg-green-50 text-green-600 text-[10px] font-medium px-1.5 py-px rounded">
+                Katalog
               </span>
             ) : (
-              <span className="bg-orange-100 text-orange-600 text-xs font-medium px-2 py-0.5 rounded-md">
-                Neue Leistung
+              <span className="bg-orange-50 text-orange-500 text-[10px] font-medium px-1.5 py-px rounded">
+                Neu
               </span>
             )}
             {position.isVorschlag && (
