@@ -35,9 +35,9 @@ const FONT_SMALL = 8
 const FONT_FOOTER = 7
 const LINE_H = 4.2   // Zeilenabstand normal
 
-// Logo-Dimensionen (600x201px → Ratio 2.985:1)
+// Logo-Dimensionen (1000x138px → Ratio 7.25:1)
 const LOGO_W = 55
-const LOGO_H = 18.4  // = 55 / 2.985, Seitenverhältnis erhalten
+const LOGO_H = 7.6   // = 55 / 7.25, Seitenverhältnis erhalten
 
 // ── Hilfsfunktionen ──────────────────────────────────────────────────────────
 function fmt(val) {
@@ -55,7 +55,7 @@ function fmtMenge(val) {
 
 async function loadLogoBase64() {
   try {
-    const res = await fetch('/Logo_B4Y_transparent.png')
+    const res = await fetch('/logo-napetschnig.png')
     const blob = await res.blob()
     return new Promise(resolve => {
       const reader = new FileReader()
