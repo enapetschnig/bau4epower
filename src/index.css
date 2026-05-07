@@ -22,31 +22,38 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-gray-light text-secondary font-sans;
+    @apply bg-gray-light text-secondary font-sans antialiased;
     min-height: 100vh;
+  }
+  html {
+    scroll-behavior: smooth;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-primary text-white font-medium py-2 px-4 rounded-md
-           active:bg-primary-dark transition-colors duration-100
+    @apply bg-primary text-white font-medium py-2.5 px-4 rounded-lg
+           active:bg-primary-dark hover:bg-primary-dark transition-all duration-150
            disabled:opacity-40 disabled:cursor-not-allowed
-           min-h-[40px] flex items-center justify-center gap-1.5 text-[13px];
+           min-h-[42px] flex items-center justify-center gap-1.5 text-[13px];
+    box-shadow: 0 2px 6px rgba(246,135,20,0.25);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 4px 10px rgba(246,135,20,0.35);
   }
   .btn-secondary {
-    @apply bg-white text-secondary font-medium py-2 px-4 rounded-md border border-gray-200
-           active:bg-gray-50 transition-colors duration-100
-           min-h-[40px] flex items-center justify-center gap-1.5 text-[13px];
+    @apply bg-white text-secondary font-medium py-2.5 px-4 rounded-lg border border-gray-200
+           active:bg-gray-50 hover:bg-gray-50 transition-all duration-150
+           min-h-[42px] flex items-center justify-center gap-1.5 text-[13px];
   }
   .card {
-    @apply bg-white rounded-lg border border-gray-100 p-3;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    @apply bg-white rounded-xl border border-gray-100 p-3.5;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
   }
   .input-field {
-    @apply w-full rounded-md border border-gray-200 px-3 py-2 text-[13px]
-           focus:outline-none focus:border-gray-400
-           bg-white min-h-[38px];
+    @apply w-full rounded-lg border border-gray-200 px-3 py-2 text-[13px]
+           focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15
+           bg-white min-h-[40px] transition-all duration-150;
   }
   .copy-field {
     @apply flex items-center gap-2 bg-gray-50 rounded-md px-2.5 py-1.5
@@ -62,7 +69,14 @@
     @apply text-sm font-semibold text-secondary;
   }
   .label {
-    @apply text-[10px] font-medium text-gray-400 uppercase tracking-wider;
+    @apply text-[10px] font-semibold text-gray-400 uppercase tracking-wider;
+  }
+  .tile-card {
+    @apply bg-white rounded-2xl border border-gray-100 p-4 active:scale-[0.97] transition-transform block cursor-pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .tile-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
   }
 }
 
@@ -75,37 +89,26 @@
     60%  { box-shadow: 0 0 0 22px rgba(246, 135, 20, 0), 0 8px 24px rgba(246, 135, 20, 0.35); }
     100% { box-shadow: 0 0 0 0 rgba(246, 135, 20, 0), 0 8px 24px rgba(246, 135, 20, 0.35); }
   }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }
 
-/* Screen: hide print-only elements */
+/* Print Styles */
 .hidden-screen { display: none; }
 .print-page-header { display: none; }
 
-/* ── PRINT STYLES ─────────────────────────────────────────── */
 @media print {
   @page {
     margin: 4mm 8mm;
     size: A4 portrait;
   }
-
-  /* Hide everything except the print area */
-  body * {
-    visibility: hidden;
-  }
-  #katalog-print-area,
-  #katalog-print-area * {
-    visibility: visible;
-  }
-  #katalog-print-area {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  /* Page header – static flow, appears once at top of page 1 */
+  body * { visibility: hidden; }
+  #katalog-print-area, #katalog-print-area * { visibility: visible; }
+  #katalog-print-area { position: absolute; top: 0; left: 0; width: 100%; }
   .print-page-header {
     display: flex !important;
     align-items: center;
@@ -114,20 +117,10 @@
     border-bottom: 1.5px solid #f68714;
     margin-bottom: 2mm;
   }
-  .print-content {
-    margin-top: 0;
-  }
-
-  /* Gewerk blocks – NO forced page breaks, let browser decide */
-  .print-gewerk-block {
-    page-break-before: auto;
-    break-before: auto;
-    margin-bottom: 3mm;
-  }
-
-  /* Gewerk heading – visible in both web and print */
+  .print-content { margin-top: 0; }
+  .print-gewerk-block { page-break-before: auto; break-before: auto; margin-bottom: 3mm; }
   .print-gewerk-heading {
-    background: #fef2f2 !important;
+    background: #fff7ed !important;
     color: #f68714 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
@@ -135,19 +128,15 @@
     font-size: 11px;
     padding: 1mm 3mm;
     border-bottom: 1.5px solid #f68714;
-    border-radius: 0;
     page-break-after: avoid;
-    break-after: avoid;
   }
-
-  /* Kurz table */
-  .print-table-kurz {
+  .print-table-kurz, .print-table-detail {
     width: 100%;
     border-collapse: collapse;
     font-size: 10px;
     line-height: 1.2;
   }
-  .print-table-kurz th {
+  .print-table-kurz th, .print-table-detail th {
     background: #f3f4f6;
     color: #374151;
     padding: 0.5mm 2mm;
@@ -156,41 +145,12 @@
     font-size: 9px;
     text-transform: uppercase;
   }
-  .print-table-kurz td {
-    padding: 0.3mm 2mm;
-    border-bottom: 0.3px solid #e5e7eb;
-  }
-  .print-table-kurz tr:nth-child(even) td {
-    background: #f9fafb;
-  }
-
-  /* Detail table */
-  .print-table-detail {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 10px;
-    line-height: 1.2;
-  }
-  .print-table-detail th {
-    background: #f3f4f6;
-    color: #374151;
-    padding: 0.5mm 2mm;
-    text-align: left;
-    font-weight: 600;
-    font-size: 9px;
-    text-transform: uppercase;
-  }
-  .print-table-detail td {
+  .print-table-kurz td, .print-table-detail td {
     padding: 0.3mm 2mm;
     border-bottom: 0.3px solid #e5e7eb;
     vertical-align: top;
   }
-  .print-table-detail tr:nth-child(even) td {
-    background: #f9fafb;
-  }
-  .print-detail-desc {
-    color: #6b7280;
-    font-size: 8px;
-    display: block;
-  }
+  .print-table-kurz tr:nth-child(even) td,
+  .print-table-detail tr:nth-child(even) td { background: #f9fafb; }
+  .print-detail-desc { color: #6b7280; font-size: 8px; display: block; }
 }

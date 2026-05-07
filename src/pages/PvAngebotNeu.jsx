@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Plus, Trash, X, SpinnerGap, FilePdf, FloppyDisk, ArrowLeft, SunHorizon, Lightning, BatteryFull, House, Plug, Thermometer, Camera, ShieldCheck } from '@phosphor-icons/react'
+import { Plus, Trash, X, SpinnerGap, FilePdf, FloppyDisk, ArrowLeft, SunHorizon, Lightning, BatteryFull, House, Plug, Thermometer, Camera, ShieldCheck, Eye } from '@phosphor-icons/react'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useToast } from '../contexts/ToastContext.jsx'
 import { loadPvProducts, calcMontagePreis, calcInstallationPreis } from '../lib/pvProducts.js'
 import { createPvOffer, updatePvOffer, loadPvOffer, calculateTotals } from '../lib/pvOffers.js'
 import { generatePvAngebotPdf } from '../lib/pvPdfGenerator.js'
+import PvAngebotVorschau from '../components/PvAngebotVorschau.jsx'
 
 const DACHTYPEN = [
   { v: 'ziegel', l: 'Ziegeldach' },
@@ -25,6 +26,7 @@ export default function PvAngebotNeu() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [generatingPdf, setGeneratingPdf] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
 
   // Form state
   const [kunde, setKunde] = useState({
@@ -546,14 +548,27 @@ export default function PvAngebotNeu() {
       </div>
 
       {/* Actions */}
-      <div className="grid grid-cols-2 gap-2 pt-1">
+      <div className="grid grid-cols-3 gap-2 pt-1">
+        <button onClick={() => setShowPreview(true)} disabled={gruppen.length === 0} className="btn-secondary">
+          <Eye size={14} weight="fill" /> Vorschau
+        </button>
         <button onClick={() => handleSave(false)} disabled={saving} className="btn-secondary">
           {saving ? <SpinnerGap size={14} weight="bold" className="animate-spin" /> : <><FloppyDisk size={14} weight="fill" /> Speichern</>}
         </button>
         <button onClick={() => handleSave(true)} disabled={saving || generatingPdf} className="btn-primary">
-          {(saving || generatingPdf) ? <SpinnerGap size={14} weight="bold" className="animate-spin" /> : <><FilePdf size={14} weight="fill" /> PDF erstellen</>}
+          {(saving || generatingPdf) ? <SpinnerGap size={14} weight="bold" className="animate-spin" /> : <><FilePdf size={14} weight="fill" /> PDF</>}
         </button>
       </div>
+
+      {showPreview && (
+        <PvAngebotVorschau
+          kunde={kunde}
+          datum={datum}
+          gruppen={gruppen}
+          totals={totals}
+          onClose={() => setShowPreview(false)}
+        />
+      )}
     </div>
   )
 }
