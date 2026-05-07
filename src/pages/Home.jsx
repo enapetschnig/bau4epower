@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Briefcase, Clock, FileText, UsersThree, ChartLine, Wrench, FolderOpen, GearSix, CaretRight } from '@phosphor-icons/react'
+import { Briefcase, Clock, FileText, UsersThree, ChartLine, Wrench, FolderOpen, GearSix, CaretRight, Coin } from '@phosphor-icons/react'
 import { useAuth } from '../contexts/AuthContext.jsx'
 
 export default function Home() {
@@ -80,6 +80,22 @@ export default function Home() {
       Icon: UsersThree,
       iconBg: 'bg-teal-100',
       iconColor: 'text-teal-600',
+    },
+    {
+      to: '/zulagen',
+      label: 'Zulagen',
+      desc: 'Taggeld, Schmutzzulage uvm.',
+      Icon: Coin,
+      iconBg: 'bg-yellow-100',
+      iconColor: 'text-yellow-600',
+    },
+    {
+      to: '/angebote/material',
+      label: 'PV-Material',
+      desc: 'Produkt-Katalog verwalten',
+      Icon: Wrench,
+      iconBg: 'bg-cyan-100',
+      iconColor: 'text-cyan-600',
     },
     {
       to: '/einstellungen',
