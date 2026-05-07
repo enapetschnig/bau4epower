@@ -176,6 +176,10 @@ function FoerderungDialog({ foerderung, onClose, onSaved }) {
     min_anlage_kwp: foerderung?.min_anlage_kwp || '',
     max_anlage_kwp: foerderung?.max_anlage_kwp || '',
     hinweis: foerderung?.hinweis || '',
+    begruendung: foerderung?.begruendung || '',
+    call_zeitraum: foerderung?.call_zeitraum || '',
+    antragstelle: foerderung?.antragstelle || '',
+    link: foerderung?.link || '',
     is_active: foerderung?.is_active ?? true,
   })
   const [saving, setSaving] = useState(false)
@@ -283,11 +287,47 @@ function FoerderungDialog({ foerderung, onClose, onSaved }) {
             </div>
           </div>
           <div>
-            <label className="label block mb-0.5">Hinweis (für Mitarbeiter)</label>
+            <label className="label block mb-0.5">Hinweis (interner Tipp)</label>
             <input value={form.hinweis}
               onChange={e => setForm({ ...form, hinweis: e.target.value })}
               className="input-field"
-              placeholder="z.B. Antrag über Klima- und Energiefonds" />
+              placeholder="z.B. Antrag VOR Auftragserteilung stellen" />
+          </div>
+
+          <div className="border-t border-gray-100 pt-2 mt-2">
+            <p className="text-[11px] text-gray-500 mb-2 font-semibold">Texte für Kunden-Präsentation</p>
+
+            <div>
+              <label className="label block mb-0.5">Wie kommt der Betrag zustande?</label>
+              <textarea value={form.begruendung}
+                onChange={e => setForm({ ...form, begruendung: e.target.value })}
+                className="input-field min-h-[60px]"
+                placeholder="Z.B. Förderbetrag wird je kWp Modulleistung berechnet..." />
+            </div>
+
+            <div className="mt-2">
+              <label className="label block mb-0.5">Wann sind die Calls?</label>
+              <textarea value={form.call_zeitraum}
+                onChange={e => setForm({ ...form, call_zeitraum: e.target.value })}
+                className="input-field min-h-[50px]"
+                placeholder="Z.B. Calls finden 4× pro Jahr statt (März, Juni, Sept, Nov)" />
+            </div>
+
+            <div className="mt-2">
+              <label className="label block mb-0.5">Antragstelle</label>
+              <input value={form.antragstelle}
+                onChange={e => setForm({ ...form, antragstelle: e.target.value })}
+                className="input-field"
+                placeholder="Z.B. Klima- und Energiefonds (KPC)" />
+            </div>
+
+            <div className="mt-2">
+              <label className="label block mb-0.5">Link (optional)</label>
+              <input value={form.link}
+                onChange={e => setForm({ ...form, link: e.target.value })}
+                className="input-field"
+                placeholder="https://..." />
+            </div>
           </div>
           <label className="flex items-center gap-2 cursor-pointer pt-2">
             <input type="checkbox" checked={form.is_active}
