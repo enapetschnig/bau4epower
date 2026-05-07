@@ -1,15 +1,222 @@
-import { ChartLine } from '@phosphor-icons/react'
+import { useState, useEffect } from 'react'
+import { Navigate } from 'react-router-dom'
+import { ChartLine, FileXls, SpinnerGap, Calendar } from '@phosphor-icons/react'
+import { useAuth } from '../contexts/AuthContext.jsx'
+import { useToast } from '../contexts/ToastContext.jsx'
+import { supabase } from '../lib/supabase.js'
+import { loadProjects } from '../lib/projectRecords.js'
+import { exportHoursToExcel } from '../lib/excelExport.js'
 
 export default function Auswertung() {
+  const { isAdmin } = useAuth()
+  const { showToast } = useToast()
+  const [tab, setTab] = useState('mitarbeiter')
+  const [month, setMonth] = useState(() => {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+  })
+  const [entries, setEntries] = useState([])
+  const [profiles, setProfiles] = useState([])
+  const [projects, setProjects] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  if (!isAdmin) return <Navigate to="/" replace />
+
+  useEffect(() => {
+    loadData()
+  }, [month])
+
+  async function loadData() {
+    setLoading(true)
+    try {
+      const [year, m] = month.split('-')
+      const from = `${year}-${m}-01`
+      const lastDay = new Date(year, parseInt(m), 0).getDate()
+      const to = `${year}-${m}-${String(lastDay).padStart(2, '0')}`
+
+      const [entriesRes, profilesRes, projs] = await Promise.all([
+        supabase.from('time_entries')
+          .select('*')
+          .gte('datum', from)
+          .lte('datum', to)
+          .order('datum'),
+        supabase.from('profiles').select('*'),
+        loadProjects(),
+      ])
+      if (entriesRes.error) throw entriesRes.error
+      setEntries(entriesRes.data || [])
+      setProfiles(profilesRes.data || [])
+      setProjects(projs)
+    } catch (err) {
+      showToast(err.message || 'Daten konnten nicht geladen werden', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function handleExport() {
+    try {
+      exportHoursToExcel({ entries, profiles, projects, monthLabel: month })
+      showToast('Excel-Export erstellt')
+    } catch (err) {
+      showToast(err.message || 'Export fehlgeschlagen', 'error')
+    }
+  }
+
+  // Aggregations
+  const byUser = {}
+  for (const e of entries) {
+    if (!byUser[e.user_id]) byUser[e.user_id] = []
+    byUser[e.user_id].push(e)
+  }
+
+  const byProject = {}
+  for (const e of entries) {
+    if (!e.project_id) continue
+    if (!byProject[e.project_id]) byProject[e.project_id] = 0
+    byProject[e.project_id] += Number(e.stunden) || 0
+  }
+
+  const totalArbeit = entries.filter(x => !x.is_absence).reduce((s, e) => s + (Number(e.stunden) || 0), 0)
+  const totalUrlaub = entries.filter(x => x.absence_type === 'Urlaub').reduce((s, e) => s + (Number(e.stunden) || 0), 0)
+  const totalKrank = entries.filter(x => x.absence_type === 'Krankenstand').reduce((s, e) => s + (Number(e.stunden) || 0), 0)
+
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 text-center">
-      <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-        <ChartLine size={22} weight="fill" className="text-indigo-500" />
+    <div className="max-w-5xl mx-auto px-4 py-3">
+      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+        <h1 className="text-lg font-bold text-secondary">Stundenauswertung</h1>
+        <div className="flex items-center gap-2">
+          <input type="month" value={month}
+            onChange={e => setMonth(e.target.value)}
+            className="input-field max-w-[140px]" />
+          <button onClick={handleExport} disabled={loading || entries.length === 0}
+            className="btn-primary px-3">
+            <FileXls size={13} weight="fill" />
+            Excel
+          </button>
+        </div>
       </div>
-      <h1 className="text-base font-bold text-secondary">Stundenauswertung</h1>
-      <p className="text-[12px] text-gray-400 mt-2 max-w-xs mx-auto leading-relaxed">
-        Analyse aller Mitarbeiter-Stunden und Projekt-Auswertungen – wird in Kürze verfügbar sein.
-      </p>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="card text-center">
+          <p className="text-[10px] text-gray-400 uppercase tracking-wider">Arbeit</p>
+          <p className="text-lg font-bold text-primary mt-0.5">{totalArbeit.toFixed(1)}h</p>
+        </div>
+        <div className="card text-center">
+          <p className="text-[10px] text-gray-400 uppercase tracking-wider">Urlaub</p>
+          <p className="text-lg font-bold text-amber-500 mt-0.5">{totalUrlaub.toFixed(1)}h</p>
+        </div>
+        <div className="card text-center">
+          <p className="text-[10px] text-gray-400 uppercase tracking-wider">Krank</p>
+          <p className="text-lg font-bold text-rose-500 mt-0.5">{totalKrank.toFixed(1)}h</p>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-px bg-gray-100 rounded-md p-0.5 mb-3">
+        {[
+          { v: 'mitarbeiter', l: 'Mitarbeiter' },
+          { v: 'projekte', l: 'Projekte' },
+          { v: 'details', l: 'Details' },
+        ].map(t => (
+          <button key={t.v}
+            onClick={() => setTab(t.v)}
+            className={`flex-1 py-1.5 text-[12px] font-medium rounded-[5px] transition-all
+              ${tab === t.v ? 'bg-white text-secondary shadow-sm' : 'text-gray-400'}`}>
+            {t.l}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <SpinnerGap size={28} className="animate-spin text-primary" />
+        </div>
+      ) : entries.length === 0 ? (
+        <div className="text-center py-12">
+          <Calendar size={32} className="mx-auto mb-2 text-gray-200" />
+          <p className="text-[13px] text-gray-400">Keine Einträge in diesem Monat</p>
+        </div>
+      ) : tab === 'mitarbeiter' ? (
+        <div className="space-y-1.5">
+          {Object.entries(byUser).map(([uid, list]) => {
+            const profile = profiles.find(p => p.id === uid)
+            const name = profile ? `${profile.vorname || ''} ${profile.nachname || ''}`.trim() || profile.email : uid
+            const arbeit = list.filter(x => !x.is_absence).reduce((s, e) => s + (Number(e.stunden) || 0), 0)
+            const urlaub = list.filter(x => x.absence_type === 'Urlaub').reduce((s, e) => s + (Number(e.stunden) || 0), 0)
+            const krank = list.filter(x => x.absence_type === 'Krankenstand').reduce((s, e) => s + (Number(e.stunden) || 0), 0)
+            const total = list.reduce((s, e) => s + (Number(e.stunden) || 0), 0)
+            return (
+              <div key={uid} className="bg-white rounded-lg border border-gray-100 p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[13px] font-semibold text-secondary truncate">{name}</p>
+                  <span className="text-[13px] font-bold text-primary">{total.toFixed(1)}h</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-[11px]">
+                  <div className="text-center">
+                    <p className="text-gray-400">Arbeit</p>
+                    <p className="font-semibold text-secondary">{arbeit.toFixed(1)}h</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-gray-400">Urlaub</p>
+                    <p className="font-semibold text-amber-500">{urlaub.toFixed(1)}h</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-gray-400">Krank</p>
+                    <p className="font-semibold text-rose-500">{krank.toFixed(1)}h</p>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : tab === 'projekte' ? (
+        <div className="space-y-1.5">
+          {Object.entries(byProject)
+            .sort(([, a], [, b]) => b - a)
+            .map(([pid, sum]) => {
+              const project = projects.find(p => p.id === pid)
+              return (
+                <div key={pid} className="bg-white rounded-lg border border-gray-100 p-3 flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-semibold text-secondary truncate">{project?.name || 'Unbekannt'}</p>
+                    {project?.adresse && <p className="text-[11px] text-gray-400 truncate">{project.adresse}</p>}
+                  </div>
+                  <span className="text-[13px] font-bold text-primary">{sum.toFixed(1)}h</span>
+                </div>
+              )
+            })}
+          {Object.keys(byProject).length === 0 && (
+            <p className="text-center py-8 text-[13px] text-gray-400">Keine Projekt-Stunden in diesem Monat</p>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-1">
+          {entries.map(e => {
+            const profile = profiles.find(p => p.id === e.user_id)
+            const name = profile ? `${profile.vorname || ''} ${profile.nachname || ''}`.trim() || profile.email : '–'
+            const project = projects.find(p => p.id === e.project_id)
+            return (
+              <div key={e.id} className="bg-white rounded-lg border border-gray-100 px-3 py-2 flex items-center gap-2">
+                <span className="text-[10px] text-gray-400 w-12">{formatDate(e.datum)}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[12px] font-medium text-secondary truncate">{name}</p>
+                  <p className="text-[10px] text-gray-400 truncate">
+                    {e.is_absence ? e.absence_type : (project?.name || 'Ohne Projekt')}
+                    {e.taetigkeit ? ` · ${e.taetigkeit}` : ''}
+                  </p>
+                </div>
+                <span className="text-[12px] font-bold text-primary">{Number(e.stunden).toFixed(2)}h</span>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
+}
+
+function formatDate(d) {
+  return new Date(d).toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit' })
 }

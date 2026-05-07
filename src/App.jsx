@@ -5,10 +5,16 @@ import Layout from './components/Layout/Layout.jsx'
 import Login from './pages/Login.jsx'
 import Home from './pages/Home.jsx'
 import Projekte from './pages/Projekte.jsx'
+import ProjektDetail from './pages/ProjektDetail.jsx'
+import ProjektDateien from './pages/ProjektDateien.jsx'
+import ProjektMaterial from './pages/ProjektMaterial.jsx'
 import Zeiterfassung from './pages/Zeiterfassung.jsx'
 import Mitarbeiter from './pages/Mitarbeiter.jsx'
+import MitarbeiterDokumente from './pages/MitarbeiterDokumente.jsx'
 import MeineStunden from './pages/MeineStunden.jsx'
+import MeineDokumente from './pages/MeineDokumente.jsx'
 import Regiearbeiten from './pages/Regiearbeiten.jsx'
+import RegiearbeitForm from './pages/RegiearbeitForm.jsx'
 import Auswertung from './pages/Auswertung.jsx'
 import PvAngeboteListe from './pages/PvAngeboteListe.jsx'
 import PvAngebotNeu from './pages/PvAngebotNeu.jsx'
@@ -44,23 +50,36 @@ function ProtectedRoutes() {
       <Route path="/" element={<Layout />}>
         <Route index element={<Home />} />
 
+        {/* Projekte */}
+        <Route path="projekte" element={<Projekte />} />
+        <Route path="projekte/:id" element={<ProjektDetail />} />
+        <Route path="projekte/:id/dateien/:category" element={<ProjektDateien />} />
+        <Route path="projekte/:id/material" element={<ProjektMaterial />} />
+
+        {/* Zeiterfassung & Stunden */}
+        <Route path="zeiterfassung" element={<Zeiterfassung />} />
+        <Route path="meine-stunden" element={<MeineStunden />} />
+        <Route path="meine-dokumente" element={<MeineDokumente />} />
+
+        {/* Regiearbeiten */}
+        <Route path="regiearbeiten" element={<Regiearbeiten />} />
+        <Route path="regiearbeiten/neu" element={<RegiearbeitForm />} />
+        <Route path="regiearbeiten/:id" element={<RegiearbeitForm />} />
+
+        {/* Mitarbeiter (Admin) */}
+        <Route path="mitarbeiter" element={<Mitarbeiter />} />
+        <Route path="mitarbeiter/:employeeId/dokumente" element={<MitarbeiterDokumente />} />
+        <Route path="auswertung" element={<Auswertung />} />
+
         {/* PV-Angebote */}
         <Route path="angebote" element={<PvAngeboteListe />} />
         <Route path="angebote/neu" element={<PvAngebotNeu />} />
         <Route path="angebote/neu/:id" element={<PvAngebotNeu />} />
         <Route path="angebote/material" element={<PvMaterial />} />
 
-        {/* Brodnig-Style Pages */}
-        <Route path="projekte" element={<Projekte />} />
-        <Route path="zeiterfassung" element={<Zeiterfassung />} />
-        <Route path="meine-stunden" element={<MeineStunden />} />
-        <Route path="meine-dokumente" element={<Regiearbeiten />} />
-        <Route path="regiearbeiten" element={<Regiearbeiten />} />
-        <Route path="mitarbeiter" element={<Mitarbeiter />} />
-        <Route path="auswertung" element={<Auswertung />} />
         <Route path="einstellungen" element={<Einstellungen />} />
 
-        {/* Legacy / Detail Routes (Kalkulations-Funktionen behalten) */}
+        {/* Legacy routes (Kalkulations-System bleibt verfügbar) */}
         <Route path="kalkulation" element={<Kalkulation />} />
         <Route path="aufmass" element={<AufmassHub />} />
         <Route path="besprechung" element={<BesprechungHub />} />

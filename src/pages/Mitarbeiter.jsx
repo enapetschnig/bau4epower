@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Plus, X, SpinnerGap, UserCircle, Trash, PencilSimple } from '@phosphor-icons/react'
+import { Link } from 'react-router-dom'
+import { Plus, X, SpinnerGap, UserCircle, Trash, PencilSimple, FolderOpen } from '@phosphor-icons/react'
 import { useToast } from '../contexts/ToastContext.jsx'
 import { loadEmployees, createEmployee, updateEmployee, deleteEmployee } from '../lib/employees.js'
 
@@ -78,6 +79,9 @@ export default function Mitarbeiter() {
                   )}
                 </div>
                 <div className="flex items-center gap-1">
+                  <Link to={`/mitarbeiter/${e.id}/dokumente`} className="touch-btn text-gray-400" title="Dokumente">
+                    <FolderOpen size={14} />
+                  </Link>
                   <button onClick={() => setEditing(e)} className="touch-btn text-gray-400">
                     <PencilSimple size={14} />
                   </button>
