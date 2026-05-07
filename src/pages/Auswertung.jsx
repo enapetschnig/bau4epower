@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
-import { ChartLine, FileXls, SpinnerGap, Calendar, Coin } from '@phosphor-icons/react'
+import { ChartLine, FileXls, SpinnerGap, Calendar, Coin, Lightning, SunHorizon, Wrench } from '@phosphor-icons/react'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useToast } from '../contexts/ToastContext.jsx'
 import { supabase } from '../lib/supabase.js'
-import { loadProjects } from '../lib/projectRecords.js'
+import { loadProjects, GEWERKE, gewerkKurz } from '../lib/projectRecords.js'
 import { loadZulagenForEntries } from '../lib/zulagen.js'
 import { exportHoursToExcel } from '../lib/excelExport.js'
+
+const GEWERK_ICONS = {
+  elektro: { Icon: Lightning, color: 'text-amber-600', bg: 'bg-amber-100' },
+  pv: { Icon: SunHorizon, color: 'text-emerald-600', bg: 'bg-emerald-100' },
+  installateur: { Icon: Wrench, color: 'text-blue-600', bg: 'bg-blue-100' },
+}
 
 export default function Auswertung() {
   const { isAdmin } = useAuth()
@@ -204,25 +210,7 @@ export default function Auswertung() {
           })}
         </div>
       ) : tab === 'projekte' ? (
-        <div className="space-y-1.5">
-          {Object.entries(byProject)
-            .sort(([, a], [, b]) => b - a)
-            .map(([pid, sum]) => {
-              const project = projects.find(p => p.id === pid)
-              return (
-                <div key={pid} className="bg-white rounded-lg border border-gray-100 p-3 flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold text-secondary truncate">{project?.name || 'Unbekannt'}</p>
-                    {project?.adresse && <p className="text-[11px] text-gray-400 truncate">{project.adresse}</p>}
-                  </div>
-                  <span className="text-[13px] font-bold text-primary">{sum.toFixed(1)}h</span>
-                </div>
-              )
-            })}
-          {Object.keys(byProject).length === 0 && (
-            <p className="text-center py-8 text-[13px] text-gray-400">Keine Projekt-Stunden in diesem Monat</p>
-          )}
-        </div>
+        <ProjekteTabContent byProject={byProject} projects={projects} />
       ) : tab === 'zulagen' ? (
         <ZulagenView zulagenList={zulagenList} entries={entries} profiles={profiles} />
       ) : (
@@ -257,6 +245,98 @@ export default function Auswertung() {
           })}
         </div>
       )}
+    </div>
+  )
+}
+
+function ProjekteTabContent({ byProject, projects }) {
+  const [filterGewerk, setFilterGewerk] = useState('alle')
+
+  const list = Object.entries(byProject)
+    .map(([pid, sum]) => ({ project: projects.find(p => p.id === pid), sum, pid }))
+    .filter(x => x.project) // nur existierende Projekte
+    .filter(x => filterGewerk === 'alle' || x.project.gewerk === filterGewerk)
+    .sort((a, b) => b.sum - a.sum)
+
+  const totalHours = list.reduce((s, x) => s + x.sum, 0)
+
+  // Counts pro Gewerk
+  const countsByGewerk = {}
+  for (const [pid] of Object.entries(byProject)) {
+    const p = projects.find(x => x.id === pid)
+    if (!p) continue
+    countsByGewerk[p.gewerk || 'unbekannt'] = (countsByGewerk[p.gewerk || 'unbekannt'] || 0) + 1
+  }
+  const totalCount = Object.values(countsByGewerk).reduce((s, n) => s + n, 0)
+
+  return (
+    <div className="space-y-3">
+      {/* Gewerk-Filter */}
+      <div className="grid grid-cols-4 gap-1.5">
+        <button
+          onClick={() => setFilterGewerk('alle')}
+          className={`flex flex-col items-center justify-center py-2 rounded-lg border-2 transition-all
+            ${filterGewerk === 'alle' ? 'bg-primary-50 border-primary text-primary' : 'bg-white border-gray-200 text-gray-400'}`}
+        >
+          <span className="text-[10px] font-semibold">Alle</span>
+          <span className="text-[9px] opacity-70">{totalCount}</span>
+        </button>
+        {GEWERKE.map(g => {
+          const cfg = GEWERK_ICONS[g.v]
+          const active = filterGewerk === g.v
+          return (
+            <button
+              key={g.v}
+              onClick={() => setFilterGewerk(g.v)}
+              className={`flex flex-col items-center justify-center py-2 rounded-lg border-2 transition-all
+                ${active ? `${cfg.bg} border-current ${cfg.color}` : 'bg-white border-gray-200 text-gray-400'}`}
+            >
+              <cfg.Icon size={14} weight="fill" className={active ? cfg.color : 'text-gray-300'} />
+              <span className="text-[10px] font-semibold mt-0.5">{g.kurz}</span>
+              <span className="text-[9px] opacity-70">{countsByGewerk[g.v] || 0}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Sum */}
+      <div className="text-right text-[11px] text-gray-400">
+        Gesamt: <strong className="text-primary">{totalHours.toFixed(1)} h</strong>
+      </div>
+
+      {/* List */}
+      <div className="space-y-1.5">
+        {list.map(({ project, sum, pid }) => {
+          const cfg = GEWERK_ICONS[project.gewerk] || GEWERK_ICONS.elektro
+          return (
+            <div key={pid} className="bg-white rounded-lg border border-gray-100 p-3 flex items-center gap-3">
+              <div className={`w-9 h-9 ${cfg.bg} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                <cfg.Icon size={16} weight="fill" className={cfg.color} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="text-[10px] bg-primary-50 text-primary px-1.5 py-px rounded font-mono font-semibold">
+                    {project.projekt_nummer || '–'}
+                  </span>
+                  <span className={`text-[9px] ${cfg.bg} ${cfg.color} px-1 py-px rounded font-medium`}>
+                    {gewerkKurz(project.gewerk)}
+                  </span>
+                </div>
+                <p className="text-[13px] font-semibold text-secondary truncate">
+                  {project.kunde_name || project.name || 'Unbenannt'}
+                </p>
+                {project.adresse && <p className="text-[11px] text-gray-400 truncate">{project.adresse}</p>}
+              </div>
+              <span className="text-[13px] font-bold text-primary flex-shrink-0">{sum.toFixed(1)}h</span>
+            </div>
+          )
+        })}
+        {list.length === 0 && (
+          <p className="text-center py-8 text-[13px] text-gray-400">
+            {filterGewerk === 'alle' ? 'Keine Projekt-Stunden in diesem Monat' : `Keine Stunden im Gewerk "${gewerkKurz(filterGewerk)}"`}
+          </p>
+        )}
+      </div>
     </div>
   )
 }

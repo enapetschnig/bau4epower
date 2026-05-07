@@ -592,7 +592,7 @@ function BlockCard({ idx, block, blockCount, projects, onUpdate, onRemove, hours
             value={block.projectId}
             onChange={(id) => onUpdate('projectId', id)}
             onCreateNew={() => setShowNewProject(true)}
-            placeholder="Projektnummer oder Name suchen..."
+            placeholder="Projektnummer oder Name suchen (alle Gewerke)..."
           />
         </div>
 

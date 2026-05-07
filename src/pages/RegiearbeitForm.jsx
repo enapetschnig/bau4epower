@@ -10,6 +10,8 @@ import {
   loadDisturbancePhotos, uploadDisturbancePhoto, deleteDisturbancePhoto, getDisturbancePhotoUrl,
 } from '../lib/disturbances.js'
 import PageHeader from '../components/Layout/PageHeader.jsx'
+import ProjectCombobox from '../components/ProjectCombobox.jsx'
+import ProjectDialog from '../components/ProjectDialog.jsx'
 
 export default function RegiearbeitForm() {
   const { id } = useParams()
@@ -22,6 +24,7 @@ export default function RegiearbeitForm() {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [showNewProject, setShowNewProject] = useState(false)
 
   const [form, setForm] = useState({
     datum: new Date().toISOString().slice(0, 10),
@@ -205,14 +208,20 @@ export default function RegiearbeitForm() {
       <div className="px-4 pt-3 space-y-3">
         {/* Stammdaten */}
         <Section title="Datum & Projekt">
-          <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="label block mb-0.5">Datum</label>
             <input type="date" value={form.datum}
               onChange={e => setForm({ ...form, datum: e.target.value })} className="input-field" />
-            <select value={form.project_id}
-              onChange={e => setForm({ ...form, project_id: e.target.value })} className="input-field">
-              <option value="">– kein Projekt –</option>
-              {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
+          </div>
+          <div>
+            <label className="label block mb-0.5">Projekt (optional)</label>
+            <ProjectCombobox
+              projects={projects}
+              value={form.project_id}
+              onChange={(id) => setForm({ ...form, project_id: id })}
+              onCreateNew={() => setShowNewProject(true)}
+              placeholder="Projekt suchen oder anlegen..."
+            />
           </div>
         </Section>
 
@@ -380,6 +389,18 @@ export default function RegiearbeitForm() {
           </p>
         )}
       </div>
+
+      {showNewProject && (
+        <ProjectDialog
+          defaultGewerk="elektro"
+          onClose={() => setShowNewProject(false)}
+          onCreated={(p) => {
+            setProjects(prev => [p, ...prev])
+            setForm(f => ({ ...f, project_id: p.id }))
+            setShowNewProject(false)
+          }}
+        />
+      )}
     </div>
   )
 }

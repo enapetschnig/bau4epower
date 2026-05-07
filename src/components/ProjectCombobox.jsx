@@ -14,11 +14,11 @@ export default function ProjectCombobox({
   onChange,
   onCreateNew,
   placeholder = 'Projekt suchen oder auswählen...',
-  defaultGewerk = null,
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
-  const [filterGewerk, setFilterGewerk] = useState(defaultGewerk || 'alle')
+  // Default: alle Gewerke anzeigen - User kann selbst filtern
+  const [filterGewerk, setFilterGewerk] = useState('alle')
   const ref = useRef(null)
   const inputRef = useRef(null)
 

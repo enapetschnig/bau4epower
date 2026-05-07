@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, FileText, Image as ImageIcon, FolderOpen, Lock, Package, MapPin, Briefcase, Trash, PencilSimple, SpinnerGap, Clock } from '@phosphor-icons/react'
+import { ArrowLeft, FileText, Image as ImageIcon, FolderOpen, Lock, Package, MapPin, Briefcase, Trash, PencilSimple, SpinnerGap, Clock, Lightning, SunHorizon, Wrench } from '@phosphor-icons/react'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useToast } from '../contexts/ToastContext.jsx'
-import { loadProject, deleteProject, updateProject } from '../lib/projectRecords.js'
+import { loadProject, deleteProject, updateProject, gewerkLabel } from '../lib/projectRecords.js'
 import { listProjectFiles, listProjectMaterials } from '../lib/projectFiles.js'
 import PageHeader from '../components/Layout/PageHeader.jsx'
+
+const GEWERK_ICONS = {
+  elektro: { Icon: Lightning, color: 'text-amber-600', bg: 'bg-amber-100' },
+  pv: { Icon: SunHorizon, color: 'text-emerald-600', bg: 'bg-emerald-100' },
+  installateur: { Icon: Wrench, color: 'text-blue-600', bg: 'bg-blue-100' },
+}
 
 const CATS = [
   { v: 'plaene', l: 'Pläne', desc: 'Bau- & Schaltpläne', Icon: FileText, color: 'from-blue-500 to-blue-600' },
@@ -98,25 +104,45 @@ export default function ProjektDetail() {
       <div className="px-4 pt-3">
         {/* Project Info Card */}
         <div className="card mb-3">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center flex-shrink-0">
-                <Briefcase size={18} weight="fill" className="text-white" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[13px] font-semibold text-secondary truncate">{project.name}</p>
-                {project.adresse && (
-                  <p className="text-[11px] text-gray-400 flex items-center gap-1 truncate">
-                    <MapPin size={11} />
-                    {project.plz ? `${project.plz} ` : ''}{project.adresse}
-                  </p>
-                )}
-              </div>
-            </div>
-            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <span className="text-[10px] bg-primary-50 text-primary px-1.5 py-px rounded font-mono font-semibold">
+              {project.projekt_nummer || '–'}
+            </span>
+            {project.gewerk && (() => {
+              const cfg = GEWERK_ICONS[project.gewerk]
+              return cfg && (
+                <span className={`text-[10px] ${cfg.bg} ${cfg.color} px-1.5 py-px rounded font-medium flex items-center gap-1`}>
+                  <cfg.Icon size={10} weight="fill" />
+                  {gewerkLabel(project.gewerk)}
+                </span>
+              )
+            })()}
+            <span className={`text-[10px] font-medium px-1.5 py-px rounded
               ${project.status === 'aktiv' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
               {project.status}
             </span>
+          </div>
+
+          <div className="flex items-start gap-2">
+            {project.gewerk && (() => {
+              const cfg = GEWERK_ICONS[project.gewerk] || GEWERK_ICONS.elektro
+              return (
+                <div className={`w-10 h-10 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
+                  <cfg.Icon size={18} weight="fill" className={cfg.color} />
+                </div>
+              )
+            })()}
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-semibold text-secondary">
+                {project.kunde_name || project.name || 'Unbenannt'}
+              </p>
+              {project.adresse && (
+                <p className="text-[11px] text-gray-400 flex items-center gap-1 mt-0.5">
+                  <MapPin size={11} />
+                  {project.plz ? `${project.plz} ` : ''}{project.adresse}
+                </p>
+              )}
+            </div>
           </div>
           {project.beschreibung && (
             <p className="text-[12px] text-gray-500 mt-2">{project.beschreibung}</p>
