@@ -10,15 +10,18 @@ export default defineConfig({
       workbox: {
         skipWaiting: true,
         clientsClaim: true,
-        // Cache alle App-Assets
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        // Navigation immer zur index.html (SPA)
+        // Bundle ist mit allen Features ~2.5 MB groß
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/functions\//, /^\/api\//],
-        // Keine Runtime-Caching für API-Calls (immer frisch)
         runtimeCaching: [
           {
             urlPattern: /\/functions\/v1\//,
+            handler: 'NetworkOnly',
+          },
+          {
+            urlPattern: /\/api\//,
             handler: 'NetworkOnly',
           },
         ],

@@ -62,8 +62,13 @@ export default function Admin() {
       title: 'Mitarbeiter & Personal',
       tiles: [
         {
-          to: '/mitarbeiter', label: 'Mitarbeiter-Verwaltung',
-          desc: 'Stammdaten, Gewerk, IBAN, Stundenlohn',
+          to: '/benutzer', label: 'Benutzer-Verwaltung',
+          desc: 'Accounts freischalten, Rollen vergeben, SMS-Einladungen',
+          Icon: ShieldCheck, color: 'from-rose-500 to-pink-600',
+        },
+        {
+          to: '/mitarbeiter', label: 'Mitarbeiter-Stammdaten',
+          desc: 'IBAN, Stundenlohn, SV-Nummer, Dokumente',
           Icon: UsersThree, color: 'from-teal-500 to-cyan-600',
           stat: stats.employees, statLabel: 'erfasst',
         },

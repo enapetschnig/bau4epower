@@ -19,8 +19,6 @@ export function AuthProvider({ children }) {
       if (profileRes.data) setProfile(profileRes.data)
       else setProfile(null)
 
-      // Wenn user_roles Eintrag fehlt, fallback auf 'mitarbeiter'
-      // Wenn aber gar keine Antwort kommt (Fehler) → null
       if (roleRes.data) {
         setRole(roleRes.data.role)
       } else if (!roleRes.error) {
@@ -68,11 +66,12 @@ export function AuthProvider({ children }) {
   }
 
   const isAdmin = role === 'administrator'
+  const isActive = profile?.is_active === true
   const fullName = profile ? `${profile.vorname || ''} ${profile.nachname || ''}`.trim() : ''
 
   return (
     <AuthContext.Provider value={{
-      user, profile, role, loading, isAdmin, fullName,
+      user, profile, role, loading, isAdmin, isActive, fullName,
       signIn, signOut, refreshRole,
     }}>
       {children}

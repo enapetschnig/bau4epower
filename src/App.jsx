@@ -3,6 +3,8 @@ import { AuthProvider, useAuth } from './contexts/AuthContext.jsx'
 import { ToastProvider } from './contexts/ToastContext.jsx'
 import Layout from './components/Layout/Layout.jsx'
 import Login from './pages/Login.jsx'
+import Register from './pages/Register.jsx'
+import WartetFreischaltung from './pages/WartetFreischaltung.jsx'
 import Home from './pages/Home.jsx'
 import Projekte from './pages/Projekte.jsx'
 import ProjektDetail from './pages/ProjektDetail.jsx'
@@ -11,6 +13,7 @@ import ProjektMaterial from './pages/ProjektMaterial.jsx'
 import Zeiterfassung from './pages/Zeiterfassung.jsx'
 import Mitarbeiter from './pages/Mitarbeiter.jsx'
 import MitarbeiterDokumente from './pages/MitarbeiterDokumente.jsx'
+import UserAdmin from './pages/UserAdmin.jsx'
 import MeineStunden from './pages/MeineStunden.jsx'
 import MeineDokumente from './pages/MeineDokumente.jsx'
 import Regiearbeiten from './pages/Regiearbeiten.jsx'
@@ -31,7 +34,7 @@ import ProtokollView from './pages/ProtokollView.jsx'
 import Kalkulation from './pages/Kalkulation/index.jsx'
 
 function ProtectedRoutes() {
-  const { user, loading } = useAuth()
+  const { user, loading, isActive, profile } = useAuth()
 
   if (loading) {
     return (
@@ -48,36 +51,37 @@ function ProtectedRoutes() {
 
   if (!user) return <Navigate to="/login" replace />
 
+  // is_active Check: User darf erst zugreifen wenn freigeschaltet
+  if (profile && !isActive) {
+    return <WartetFreischaltung />
+  }
+
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
         <Route index element={<Home />} />
 
-        {/* Projekte */}
         <Route path="projekte" element={<Projekte />} />
         <Route path="projekte/:id" element={<ProjektDetail />} />
         <Route path="projekte/:id/dateien/:category" element={<ProjektDateien />} />
         <Route path="projekte/:id/material" element={<ProjektMaterial />} />
 
-        {/* Zeiterfassung & Stunden */}
         <Route path="zeiterfassung" element={<Zeiterfassung />} />
         <Route path="meine-stunden" element={<MeineStunden />} />
         <Route path="meine-dokumente" element={<MeineDokumente />} />
 
-        {/* Regiearbeiten */}
         <Route path="regiearbeiten" element={<Regiearbeiten />} />
         <Route path="regiearbeiten/neu" element={<RegiearbeitForm />} />
         <Route path="regiearbeiten/:id" element={<RegiearbeitForm />} />
 
-        {/* Mitarbeiter (Admin) */}
         <Route path="mitarbeiter" element={<Mitarbeiter />} />
         <Route path="mitarbeiter/:employeeId/dokumente" element={<MitarbeiterDokumente />} />
+        <Route path="benutzer" element={<UserAdmin />} />
         <Route path="auswertung" element={<Auswertung />} />
         <Route path="zulagen" element={<ZulagenAdmin />} />
         <Route path="foerderungen" element={<FoerderungenAdmin />} />
         <Route path="admin" element={<Admin />} />
 
-        {/* PV-Angebote */}
         <Route path="angebote" element={<PvAngeboteListe />} />
         <Route path="angebote/neu" element={<PvAngebotNeu />} />
         <Route path="angebote/neu/:id" element={<PvAngebotNeu />} />
@@ -85,7 +89,6 @@ function ProtectedRoutes() {
 
         <Route path="einstellungen" element={<Einstellungen />} />
 
-        {/* Legacy routes (Kalkulations-System bleibt verfügbar) */}
         <Route path="kalkulation" element={<Kalkulation />} />
         <Route path="aufmass" element={<AufmassHub />} />
         <Route path="besprechung" element={<BesprechungHub />} />
@@ -107,6 +110,7 @@ export default function App() {
       <ToastProvider>
         <Routes>
           <Route path="/login" element={<LoginRoute />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/*" element={<ProtectedRoutes />} />
         </Routes>
       </ToastProvider>
@@ -115,8 +119,11 @@ export default function App() {
 }
 
 function LoginRoute() {
-  const { user, loading } = useAuth()
+  const { user, loading, isActive, profile } = useAuth()
   if (loading) return null
-  if (user) return <Navigate to="/" replace />
+  if (user) {
+    if (profile && !isActive) return <Navigate to="/" replace />
+    return <Navigate to="/" replace />
+  }
   return <Login />
 }
