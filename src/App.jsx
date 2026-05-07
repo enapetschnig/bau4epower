@@ -4,8 +4,13 @@ import { ToastProvider } from './contexts/ToastContext.jsx'
 import Layout from './components/Layout/Layout.jsx'
 import Login from './pages/Login.jsx'
 import Home from './pages/Home.jsx'
+import Projekte from './pages/Projekte.jsx'
+import Zeiterfassung from './pages/Zeiterfassung.jsx'
+import Mitarbeiter from './pages/Mitarbeiter.jsx'
+import MeineStunden from './pages/MeineStunden.jsx'
+import Regiearbeiten from './pages/Regiearbeiten.jsx'
+import Auswertung from './pages/Auswertung.jsx'
 import Kalkulation from './pages/Kalkulation/index.jsx'
-import Delegieren from './pages/Delegieren/index.jsx'
 import Einstellungen from './pages/Einstellungen.jsx'
 import AngebotView from './pages/Angebot.jsx'
 import BesprechungHub from './pages/BesprechungHub.jsx'
@@ -21,7 +26,7 @@ function ProtectedRoutes() {
       <div className="min-h-screen flex items-center justify-center bg-gray-light">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
-            <span className="text-white text-lg font-extrabold" style={{ fontFamily: 'Georgia, serif' }}>N.</span>
+            <span className="text-white text-base font-extrabold">ET</span>
           </div>
           <p className="text-gray-400 text-sm">Laden...</p>
         </div>
@@ -34,23 +39,26 @@ function ProtectedRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
-        {/* Home: 2-Button Landing */}
         <Route index element={<Home />} />
+        <Route path="projekte" element={<Projekte />} />
+        <Route path="zeiterfassung" element={<Zeiterfassung />} />
+        <Route path="meine-stunden" element={<MeineStunden />} />
+        <Route path="regiearbeiten" element={<Regiearbeiten />} />
+        <Route path="mitarbeiter" element={<Mitarbeiter />} />
+        <Route path="auswertung" element={<Auswertung />} />
+        <Route path="angebote" element={<Kalkulation />} />
+        <Route path="einstellungen" element={<Einstellungen />} />
+
+        {/* Legacy / Detail Routes – Kalkulation & Co bleiben verfügbar */}
         <Route path="kalkulation" element={<Kalkulation />} />
-        <Route path="delegieren" element={<Delegieren />} />
         <Route path="aufmass" element={<AufmassHub />} />
         <Route path="besprechung" element={<BesprechungHub />} />
-        <Route path="einstellungen" element={<Einstellungen />} />
-        {/* Detail views */}
         <Route path="angebot/:id" element={<AngebotView />} />
         <Route path="aufmass/:id" element={<AufmassView />} />
         <Route path="protokoll/:id" element={<ProtokollView />} />
-        {/* Legacy redirects */}
-        <Route path="angebote" element={<Navigate to="/kalkulation?modus=angebote" replace />} />
-        <Route path="vorlagen" element={<Navigate to="/kalkulation?modus=vorlagen" replace />} />
-        <Route path="katalog" element={<Navigate to="/kalkulation?modus=preisliste" replace />} />
-        <Route path="protokoll" element={<Navigate to="/besprechung" replace />} />
-        <Route path="protokolle" element={<Navigate to="/besprechung?tab=liste" replace />} />
+        <Route path="vorlagen" element={<Navigate to="/angebote?modus=vorlagen" replace />} />
+        <Route path="katalog" element={<Navigate to="/angebote?modus=preisliste" replace />} />
+        <Route path="delegieren" element={<Navigate to="/" replace />} />
         <Route path="admin" element={<Navigate to="/einstellungen" replace />} />
       </Route>
     </Routes>

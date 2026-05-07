@@ -368,7 +368,7 @@ export default function GrossesAngebot() {
       .catch(err => console.error('Auto-update Fehler:', err.message))
   }, [blocks]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const SESSION_KEY = 'napetschnig_gross'
+  const SESSION_KEY = 'etkoenig_gross'
   const SESSION_TTL = 4 * 60 * 60 * 1000
 
   // Restore from sessionStorage

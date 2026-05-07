@@ -122,7 +122,7 @@ export default function PdfEmailSender({
         betrifft: betrifft || '',
         adresse: adresse || '',
         projektnummer: projektnummer || '',
-        absenderName: profile?.name || user?.email || 'NAPETSCHNIG.',
+        absenderName: profile?.name || user?.email || 'ET KÖNIG GmbH',
         type,
       })
 

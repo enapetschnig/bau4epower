@@ -14,7 +14,7 @@ import { buildProtokollHtml } from '../lib/emailHtml.js'
 import { supabase, getEdgeFunctionHeaders, getFreshAccessToken } from '../lib/supabase.js'
 
 const FALLBACK_BAULEITER = []
-const ADMIN_ENTRY = { id: 'admin', name: 'Christoph Napetschnig', email: 'napetschnig.chris@gmail.com', isFallback: true }
+const ADMIN_ENTRY = { id: 'admin', name: 'Christoph Napetschnig', email: 'office@etkoenig.at', isFallback: true }
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY

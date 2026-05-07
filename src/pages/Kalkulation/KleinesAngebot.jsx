@@ -315,10 +315,10 @@ export default function KleinesAngebot({ loadOfferId = null }) {
   useEffect(() => {
     if (loadOfferId) return // Will be loaded from DB instead
     try {
-      const nachtragRaw = sessionStorage.getItem('napetschnig_nachtrag')
+      const nachtragRaw = sessionStorage.getItem('etkoenig_nachtrag')
       console.log('[Nachtrag KA] sessionStorage raw:', nachtragRaw)
       if (nachtragRaw) {
-        sessionStorage.removeItem('napetschnig_nachtrag')
+        sessionStorage.removeItem('etkoenig_nachtrag')
         try {
           const { projektnummer: pn, adresse: nadr, inputText: it } = JSON.parse(nachtragRaw)
           console.log('[Nachtrag KA] Geladen:', { pn, nadr, it })

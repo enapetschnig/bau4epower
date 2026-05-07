@@ -37,7 +37,7 @@ const STATUS_COLOR = {
 
 const FALLBACK_BAULEITER = []
 
-const ADMIN_ENTRY = { id: 'admin', name: 'Christoph Napetschnig', email: 'napetschnig.chris@gmail.com', isFallback: true }
+const ADMIN_ENTRY = { id: 'admin', name: 'Christoph Napetschnig', email: 'office@etkoenig.at', isFallback: true }
 
 export default function AngebotView() {
   const { id } = useParams()

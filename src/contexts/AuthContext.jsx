@@ -6,35 +6,36 @@ const AuthContext = createContext(null)
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
+  const [role, setRole] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
+      if (session?.user) loadUserData(session.user.id)
       else setLoading(false)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
-      else { setProfile(null); setLoading(false) }
+      if (session?.user) loadUserData(session.user.id)
+      else { setProfile(null); setRole(null); setLoading(false) }
     })
 
     return () => subscription.unsubscribe()
   }, [])
 
-  async function fetchProfile(userId) {
+  async function loadUserData(userId) {
     try {
-      const { data } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single()
-      setProfile(data)
+      const [{ data: profileData }, { data: roleData }] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
+        supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
+      ])
+      setProfile(profileData)
+      setRole(roleData?.role || 'mitarbeiter')
     } catch {
-      // Profile might not exist yet
       setProfile(null)
+      setRole(null)
     } finally {
       setLoading(false)
     }
@@ -49,11 +50,11 @@ export function AuthProvider({ children }) {
     await supabase.auth.signOut()
   }
 
-  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL
-  const isAdmin = profile?.role === 'admin' || (adminEmail && user?.email === adminEmail)
+  const isAdmin = role === 'administrator'
+  const fullName = profile ? `${profile.vorname || ''} ${profile.nachname || ''}`.trim() : ''
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, isAdmin, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, profile, role, loading, isAdmin, fullName, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   )

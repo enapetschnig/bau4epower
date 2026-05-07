@@ -3,8 +3,8 @@ import autoTable from 'jspdf-autotable'
 
 // ── Unternehmensinfos ────────────────────────────────────────────────────────
 const COMPANY = {
-  name: 'epower GmbH',
-  brand: 'epower GmbH',
+  name: 'ET KÖNIG GmbH',
+  brand: 'ET KÖNIG GmbH',
   street: 'Frojacher Straße 5',
   city: '8841 Frojach',
   plz: '8841 Frojach',
@@ -15,11 +15,11 @@ const COMPANY = {
   bic: '',
   bank: '',
   mobil: '',
-  email: 'hallo@epowergmbh.at',
+  email: 'office@etkoenig.at',
 }
 
-const COLOR_PRIMARY = [58, 58, 58]    // #3a3a3a
-const COLOR_DARK    = [26, 26, 26]    // #1a1a1a
+const COLOR_PRIMARY = [246, 135, 20]  // #f68714 - ET König Orange
+const COLOR_DARK    = [31, 41, 55]    // #1f2937
 const COLOR_GRAY    = [120, 120, 120]
 const COLOR_LIGHT   = [240, 240, 240]
 const COLOR_WHITE   = [255, 255, 255]
@@ -55,7 +55,7 @@ function fmtMenge(val) {
 
 async function loadLogoBase64() {
   try {
-    const res = await fetch('/logo-epower.png')
+    const res = await fetch('/logo-etk.png')
     const blob = await res.blob()
     return new Promise(resolve => {
       const reader = new FileReader()
@@ -325,7 +325,7 @@ export async function generateAngebotPdf({
   doc.text('Christoph Napetschnig', ML, y)
   y += LINE_H + 1
   doc.setFont('helvetica', 'normal')
-  doc.text('Geschäftsführer / epower GmbH', ML, y)
+  doc.text('Geschäftsführer / ET KÖNIG GmbH', ML, y)
 
   // ── Footer auf allen Seiten ──
   const totalPages = doc.internal.getNumberOfPages()
@@ -471,7 +471,7 @@ function drawProtoHeader(doc, { logo, projektnummer, datum, userName, userEmail,
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(8.5)
   doc.setTextColor(...COLOR_DARK)
-  doc.text('epower GmbH', pageW - 15, 31, { align: 'right' })
+  doc.text('ET KÖNIG GmbH', pageW - 15, 31, { align: 'right' })
 
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(7.5)
@@ -508,7 +508,7 @@ function drawProtoFooter(doc, pageNum, totalPages) {
   doc.setFontSize(6.5)
   doc.setTextColor(...COLOR_GRAY)
   const cx = pageW / 2
-  doc.text(`epower GmbH | ${COMPANY.city} | Geschäftsführer: ${COMPANY.gf}`, cx, fy + 5, { align: 'center' })
+  doc.text(`ET KÖNIG GmbH | ${COMPANY.city} | Geschäftsführer: ${COMPANY.gf}`, cx, fy + 5, { align: 'center' })
   doc.text(`Steuernummer: ${COMPANY.steuernr} | USt-IdNr.: ${COMPANY.uid}`, cx, fy + 10, { align: 'center' })
   doc.text(`${COMPANY.bank} | IBAN: ${COMPANY.iban} | BIC: ${COMPANY.bic}`, cx, fy + 15, { align: 'center' })
   doc.setFontSize(7)

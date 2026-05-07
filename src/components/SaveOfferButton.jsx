@@ -12,7 +12,7 @@ const isDev = import.meta.env.DEV
 
 const FALLBACK_BAULEITER = []
 
-const ADMIN_ENTRY = { id: 'admin', name: 'Christoph Napetschnig', email: 'napetschnig.chris@gmail.com', isFallback: true }
+const ADMIN_ENTRY = { id: 'admin', name: 'Christoph Napetschnig', email: 'office@etkoenig.at', isFallback: true }
 
 // Circular progress SVG
 function CircularProgress({ percent }) {
@@ -24,7 +24,7 @@ function CircularProgress({ percent }) {
       <circle cx="48" cy="48" r={R} fill="none" stroke="#e5e7eb" strokeWidth="8" />
       <circle
         cx="48" cy="48" r={R} fill="none"
-        stroke="#3a3a3a" strokeWidth="8"
+        stroke="#f68714" strokeWidth="8"
         strokeLinecap="round"
         strokeDasharray={CIRC}
         strokeDashoffset={offset}

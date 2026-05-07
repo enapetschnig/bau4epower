@@ -1,10 +1,10 @@
-# NAPETSCHNIG. Angebots-App – Projektinstruktionen
+# ET KÖNIG GmbH Angebots-App – Projektinstruktionen
 
 ## Sprache
 SPRACHE: Alle Kommunikation mit dem User (Erklärungen, Zusammenfassungen, Rückfragen) erfolgt auf Deutsch. Code-Kommentare können auf Englisch bleiben.
 
 ## Projektübersicht
-KI-gestützte Angebots-App für NAPETSCHNIG. Kein vollständiges Angebotssystem – ein intelligentes Kalkulations-Vorbereitungstool für die Hero Handwerkersoftware.
+KI-gestützte Angebots-App für ET KÖNIG GmbH Kein vollständiges Angebotssystem – ein intelligentes Kalkulations-Vorbereitungstool für die Hero Handwerkersoftware.
 
 ## Tech-Stack
 - **Frontend:** React 18 + Vite (PWA)
@@ -15,9 +15,9 @@ KI-gestützte Angebots-App für NAPETSCHNIG. Kein vollständiges Angebotssystem 
 - **Hosting:** Vercel (Frontend) + Supabase (Backend)
 
 ## Branding
-- Primärfarbe: #3a3a3a (Dunkelgrau)
-- Sekundär: #1a1a1a (Anthrazit), #f5f5f5 (Hellgrau)
-- Logo: "NAPETSCHNIG." Schriftzug in dunklem Serif-Font
+- Primärfarbe: #f68714 (ET KÖNIG Orange)
+- Sekundär: #1f2937 (Anthrazit), #f5f5f5 (Hellgrau)
+- Logo: ET KÖNIG GmbH (orange/schwarz, Logo-Datei: /public/logo-etk.png)
 
 ## Umgebungsvariablen (.env)
 ```

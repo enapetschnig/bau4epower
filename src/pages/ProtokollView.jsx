@@ -24,7 +24,7 @@ const STATUS_COLOR = {
 }
 
 const FALLBACK_BAULEITER = []
-const ADMIN_ENTRY = { id: 'admin', name: 'Christoph Napetschnig', email: 'napetschnig.chris@gmail.com', isFallback: true }
+const ADMIN_ENTRY = { id: 'admin', name: 'Christoph Napetschnig', email: 'office@etkoenig.at', isFallback: true }
 
 export default function ProtokollView() {
   const { id } = useParams()
@@ -186,8 +186,8 @@ ${lines}`
     }
     isDev && console.log('[Nachtrag] Payload:', nachtragPayload)
     try {
-      sessionStorage.setItem('napetschnig_nachtrag', JSON.stringify(nachtragPayload))
-      isDev && console.log('[Nachtrag] sessionStorage gesetzt:', sessionStorage.getItem('napetschnig_nachtrag'))
+      sessionStorage.setItem('etkoenig_nachtrag', JSON.stringify(nachtragPayload))
+      isDev && console.log('[Nachtrag] sessionStorage gesetzt:', sessionStorage.getItem('etkoenig_nachtrag'))
     } catch (err) {
       console.error('[Nachtrag] sessionStorage Fehler:', err)
     }
