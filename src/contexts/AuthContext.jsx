@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 const AuthContext = createContext(null)
@@ -8,6 +8,35 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null)
   const [role, setRole] = useState(null)
   const [loading, setLoading] = useState(true)
+
+  const loadUserData = useCallback(async (userId) => {
+    try {
+      const [profileRes, roleRes] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
+        supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
+      ])
+
+      if (profileRes.data) setProfile(profileRes.data)
+      else setProfile(null)
+
+      // Wenn user_roles Eintrag fehlt, fallback auf 'mitarbeiter'
+      // Wenn aber gar keine Antwort kommt (Fehler) → null
+      if (roleRes.data) {
+        setRole(roleRes.data.role)
+      } else if (!roleRes.error) {
+        setRole('mitarbeiter')
+      } else {
+        console.warn('[Auth] Role konnte nicht geladen werden:', roleRes.error)
+        setRole(null)
+      }
+    } catch (err) {
+      console.warn('[Auth] User-Daten Fehler:', err)
+      setProfile(null)
+      setRole(null)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -23,22 +52,10 @@ export function AuthProvider({ children }) {
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [loadUserData])
 
-  async function loadUserData(userId) {
-    try {
-      const [{ data: profileData }, { data: roleData }] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
-        supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
-      ])
-      setProfile(profileData)
-      setRole(roleData?.role || 'mitarbeiter')
-    } catch {
-      setProfile(null)
-      setRole(null)
-    } finally {
-      setLoading(false)
-    }
+  async function refreshRole() {
+    if (user) await loadUserData(user.id)
   }
 
   async function signIn(email, password) {
@@ -54,7 +71,10 @@ export function AuthProvider({ children }) {
   const fullName = profile ? `${profile.vorname || ''} ${profile.nachname || ''}`.trim() : ''
 
   return (
-    <AuthContext.Provider value={{ user, profile, role, loading, isAdmin, fullName, signIn, signOut }}>
+    <AuthContext.Provider value={{
+      user, profile, role, loading, isAdmin, fullName,
+      signIn, signOut, refreshRole,
+    }}>
       {children}
     </AuthContext.Provider>
   )
