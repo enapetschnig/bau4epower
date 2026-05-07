@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import {
   Briefcase, Clock, FileText, UsersThree, ChartLine, Wrench,
   FolderOpen, GearSix, CaretRight, Coin, SunHorizon, ShieldCheck,
+  UserPlus, ArrowRight,
 } from '@phosphor-icons/react'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { supabase } from '../lib/supabase.js'
@@ -12,11 +13,13 @@ export default function Home() {
   const firstName = (fullName || profile?.email || '').split(' ')[0] || ''
 
   const [stats, setStats] = useState({ projects: 0, monthHours: 0, openOffers: 0 })
+  const [pendingApprovals, setPendingApprovals] = useState([])
 
   useEffect(() => {
     if (!user) return
     loadStats()
-  }, [user])
+    if (isAdmin) loadPendingApprovals()
+  }, [user, isAdmin])
 
   async function loadStats() {
     try {
@@ -37,6 +40,20 @@ export default function Home() {
       })
     } catch {
       // silent
+    }
+  }
+
+  async function loadPendingApprovals() {
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, vorname, nachname, phone, created_at')
+        .eq('is_active', false)
+        .order('created_at', { ascending: false })
+        .limit(20)
+      setPendingApprovals(data || [])
+    } catch {
+      setPendingApprovals([])
     }
   }
 
@@ -111,6 +128,41 @@ export default function Home() {
           <span className="text-primary">.</span>
         </h1>
       </div>
+
+      {/* Pending Approval Banner für Admin */}
+      {isAdmin && pendingApprovals.length > 0 && (
+        <Link
+          to="/benutzer"
+          className="block bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl p-4 mb-5 active:scale-[0.99] transition-transform relative overflow-hidden"
+          style={{ boxShadow: '0 4px 14px rgba(246,135,20,0.12)' }}
+        >
+          <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-amber-300 opacity-20 blur-2xl" />
+          <div className="flex items-start gap-3 relative z-10">
+            <div className="relative flex-shrink-0">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-sm">
+                <UserPlus size={20} weight="fill" className="text-white" />
+              </div>
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                {pendingApprovals.length}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-bold text-amber-900">
+                {pendingApprovals.length === 1
+                  ? '1 Mitarbeiter wartet auf Freischaltung'
+                  : `${pendingApprovals.length} Mitarbeiter warten auf Freischaltung`}
+              </p>
+              <p className="text-[11px] text-amber-800 mt-0.5 leading-snug">
+                {pendingApprovals.slice(0, 3).map(p =>
+                  `${p.vorname || ''} ${p.nachname || ''}`.trim() || p.phone || '–'
+                ).join(', ')}
+                {pendingApprovals.length > 3 && ` und ${pendingApprovals.length - 3} weitere`}
+              </p>
+            </div>
+            <ArrowRight size={18} weight="bold" className="text-amber-700 flex-shrink-0 mt-2" />
+          </div>
+        </Link>
+      )}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-2 mb-6">
