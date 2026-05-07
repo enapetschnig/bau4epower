@@ -1,4 +1,5 @@
 <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="64" height="64" rx="12" fill="#f68714"/>
-  <text x="32" y="44" text-anchor="middle" fill="white" font-size="26" font-weight="800" font-family="Inter, sans-serif">ET</text>
+  <rect width="64" height="64" rx="14" fill="#1f2937"/>
+  <text x="32" y="40" text-anchor="middle" fill="#f68714" font-size="22" font-weight="900" font-family="Inter, system-ui, sans-serif" letter-spacing="-0.5">ET</text>
+  <path d="M14 47 L20 47 L24 38 L28 56 L32 50 L36 47 L50 47" stroke="#f68714" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
