@@ -1,6 +1,10 @@
-import { X } from '@phosphor-icons/react'
+import { X, CurrencyEur } from '@phosphor-icons/react'
 
-export default function PvAngebotVorschau({ kunde, datum, gruppen, totals, onClose }) {
+export default function PvAngebotVorschau({
+  kunde, datum, gruppen, totals,
+  foerderungen = [], foerderungSumme = 0, endpreis = null,
+  onClose,
+}) {
   const fmt = (val) => Number(val || 0).toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   const fmtMenge = (val) => Number(val || 0).toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   const formatDate = (d) => new Date(d).toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -156,9 +160,45 @@ export default function PvAngebotVorschau({ kunde, datum, gruppen, totals, onClo
               </div>
             )}
 
+            {/* Förderungs-Block */}
+            {foerderungen.length > 0 && (
+              <div className="mt-6 border-t-2 border-emerald-200 pt-3">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <CurrencyEur size={12} weight="bold" className="text-emerald-600" />
+                  <p className="text-[10px] font-bold text-emerald-700 tracking-widest uppercase">Verfügbare Förderungen</p>
+                </div>
+                <table className="w-full text-[10px]">
+                  <tbody>
+                    {foerderungen.map(f => (
+                      <tr key={f.id} className="text-emerald-800">
+                        <td className="py-0.5 pl-3">– {f.name}</td>
+                        <td className="py-0.5 text-right">−{fmt(f._berechnet)}</td>
+                      </tr>
+                    ))}
+                    <tr className="font-bold border-t border-emerald-100">
+                      <td className="py-1 pl-3 text-emerald-700">Förderung gesamt</td>
+                      <td className="py-1 text-right text-emerald-700">−{fmt(foerderungSumme)} €</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div className="mt-3 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-primary rounded-lg p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-primary uppercase tracking-wider">Endpreis nach Förderung</span>
+                    <span className="text-[16px] font-extrabold text-primary">{fmt(endpreis ?? totals.brutto)} €</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="mt-8 text-[10px] text-gray-700 space-y-2">
               <p>Wir hoffen, dass unser Angebot Ihren Vorstellungen entspricht und würden uns über eine Auftragserteilung Ihrerseits sehr freuen.</p>
               <p>Der Angebotspreis ist 60 Tage gültig.</p>
+              {foerderungen.length > 0 && (
+                <p className="text-[9px] text-gray-500 italic mt-2">
+                  Hinweis: Förderbeträge sind Schätzwerte – die tatsächliche Höhe ergibt sich aus den jeweils gültigen Förderbedingungen und verfügbaren Kontingenten.
+                </p>
+              )}
             </div>
           </div>
         </div>

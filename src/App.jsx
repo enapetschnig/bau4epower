@@ -20,6 +20,7 @@ import PvAngeboteListe from './pages/PvAngeboteListe.jsx'
 import PvAngebotNeu from './pages/PvAngebotNeu.jsx'
 import PvMaterial from './pages/PvMaterial.jsx'
 import ZulagenAdmin from './pages/ZulagenAdmin.jsx'
+import FoerderungenAdmin from './pages/FoerderungenAdmin.jsx'
 import Admin from './pages/Admin.jsx'
 import Einstellungen from './pages/Einstellungen.jsx'
 import AngebotView from './pages/Angebot.jsx'
@@ -73,6 +74,7 @@ function ProtectedRoutes() {
         <Route path="mitarbeiter/:employeeId/dokumente" element={<MitarbeiterDokumente />} />
         <Route path="auswertung" element={<Auswertung />} />
         <Route path="zulagen" element={<ZulagenAdmin />} />
+        <Route path="foerderungen" element={<FoerderungenAdmin />} />
         <Route path="admin" element={<Admin />} />
 
         {/* PV-Angebote */}

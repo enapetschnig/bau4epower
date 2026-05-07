@@ -112,6 +112,11 @@ export default function Admin() {
           Icon: Database, color: 'from-cyan-500 to-blue-600',
           stat: stats.pvProducts, statLabel: 'Produkte',
         },
+        {
+          to: '/foerderungen', label: 'PV-Förderungen',
+          desc: 'Bundes-, Landes- und Sonderförderungen pflegen',
+          Icon: Coin, color: 'from-emerald-600 to-green-700',
+        },
       ],
     },
     {

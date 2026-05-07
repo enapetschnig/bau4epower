@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Plus, Trash, X, SpinnerGap, FilePdf, FloppyDisk, ArrowLeft, SunHorizon, Lightning, BatteryFull, House, Plug, Thermometer, Camera, ShieldCheck, Eye } from '@phosphor-icons/react'
+import { Plus, Trash, X, SpinnerGap, FilePdf, FloppyDisk, ArrowLeft, SunHorizon, Lightning, BatteryFull, House, Plug, Thermometer, Camera, ShieldCheck, Eye, CurrencyEur, Presentation } from '@phosphor-icons/react'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useToast } from '../contexts/ToastContext.jsx'
 import { loadPvProducts, calcMontagePreis, calcInstallationPreis } from '../lib/pvProducts.js'
 import { createPvOffer, updatePvOffer, loadPvOffer, calculateTotals } from '../lib/pvOffers.js'
 import { generatePvAngebotPdf } from '../lib/pvPdfGenerator.js'
+import { loadFoerderungen, calcFoerderung } from '../lib/foerderungen.js'
 import PvAngebotVorschau from '../components/PvAngebotVorschau.jsx'
+import KundenPraesentation from '../components/KundenPraesentation.jsx'
 
 const DACHTYPEN = [
   { v: 'ziegel', l: 'Ziegeldach' },
@@ -23,10 +25,15 @@ export default function PvAngebotNeu() {
   const { showToast } = useToast()
 
   const [products, setProducts] = useState([])
+  const [foerderungen, setFoerderungen] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [generatingPdf, setGeneratingPdf] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
+  const [showPresentation, setShowPresentation] = useState(false)
+
+  // Förderungen: Map von foerderung_id → { aktiv, betrag (custom override) }
+  const [selectedFoerderungen, setSelectedFoerderungen] = useState({})
 
   // Form state
   const [kunde, setKunde] = useState({
@@ -63,8 +70,12 @@ export default function PvAngebotNeu() {
   async function loadInitial() {
     setLoading(true)
     try {
-      const prods = await loadPvProducts()
+      const [prods, foerd] = await Promise.all([
+        loadPvProducts(),
+        loadFoerderungen().catch(() => []),
+      ])
       setProducts(prods)
+      setFoerderungen(foerd)
 
       // Defaults
       const defModul = prods.find(p => p.category === 'modul' && p.modell?.includes('AS-6M-380W'))
@@ -258,6 +269,48 @@ export default function PvAngebotNeu() {
   const gruppen = buildGruppen()
   const totals = calculateTotals(gruppen)
 
+  // Förderungs-Berechnung
+  const foerderungsContext = {
+    kwp,
+    speicher_kwh: speicherEnabled ? speicherKwh : 0,
+    hat_wallbox: !!wallbox,
+    hat_heizstab: !!heizstab,
+    netto: totals.netto,
+    brutto: totals.brutto,
+  }
+
+  const aktiveFoerderungen = foerderungen
+    .map(f => {
+      const sel = selectedFoerderungen[f.id]
+      if (!sel?.aktiv) return null
+      const auto = calcFoerderung(f, foerderungsContext)
+      const betrag = sel.custom !== undefined && sel.custom !== '' ? Number(sel.custom) : auto
+      return { ...f, _berechnet: betrag, _eligible: auto > 0 || sel.custom !== undefined }
+    })
+    .filter(Boolean)
+
+  const foerderungSumme = aktiveFoerderungen.reduce((s, f) => s + (Number(f._berechnet) || 0), 0)
+  const endpreis = Math.max(0, totals.brutto - foerderungSumme)
+
+  function toggleFoerderung(f) {
+    setSelectedFoerderungen(prev => {
+      const next = { ...prev }
+      if (next[f.id]?.aktiv) {
+        next[f.id] = { ...next[f.id], aktiv: false }
+      } else {
+        next[f.id] = { aktiv: true, custom: undefined }
+      }
+      return next
+    })
+  }
+
+  function setFoerderungCustom(id, val) {
+    setSelectedFoerderungen(prev => ({
+      ...prev,
+      [id]: { ...(prev[id] || {}), aktiv: true, custom: val }
+    }))
+  }
+
   async function handleSave(andThenPdf = false) {
     if (!kunde.nachname && !kunde.firma) {
       showToast('Bitte Kunde-Name eingeben', 'error')
@@ -279,6 +332,15 @@ export default function PvAngebotNeu() {
         hat_wallbox: !!wallbox,
         hat_heizstab: !!heizstab,
         hat_backup: !!backup,
+        foerderung_aktiv: aktiveFoerderungen.length > 0,
+        foerderungen_data: aktiveFoerderungen.map(f => ({
+          id: f.id,
+          name: f.name,
+          kategorie: f.kategorie,
+          betrag: f._berechnet,
+        })),
+        foerderung_summe: foerderungSumme,
+        endpreis_nach_foerderung: endpreis,
         status: 'entwurf',
       }
       let savedId = id
@@ -508,6 +570,67 @@ export default function PvAngebotNeu() {
         </select>
       </Section>
 
+      {/* FÖRDERUNGEN */}
+      {foerderungen.length > 0 && (
+        <Section icon={<CurrencyEur size={14} weight="fill" className="text-emerald-600" />} title="Förderungen">
+          <p className="text-[11px] text-gray-400 -mt-1 mb-1">
+            Wähle anwendbare Förderungen. Beträge werden anhand Anlage berechnet, du kannst sie aber pro Position überschreiben.
+          </p>
+          <div className="space-y-1.5">
+            {foerderungen.map(f => {
+              const sel = selectedFoerderungen[f.id]
+              const auto = calcFoerderung(f, foerderungsContext)
+              const eligible = auto > 0
+              const aktiv = !!sel?.aktiv
+              const customVal = sel?.custom
+              const angezeigt = aktiv ? (customVal !== undefined && customVal !== '' ? Number(customVal) : auto) : 0
+
+              return (
+                <div key={f.id} className={`rounded-lg border p-2 transition-all
+                  ${aktiv ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-gray-100'}`}>
+                  <div className="flex items-start gap-2">
+                    <button
+                      type="button"
+                      onClick={() => toggleFoerderung(f)}
+                      disabled={!eligible && !aktiv}
+                      className={`w-5 h-5 mt-0.5 rounded flex items-center justify-center flex-shrink-0 transition-colors
+                        ${aktiv ? 'bg-emerald-500 text-white' : eligible ? 'bg-gray-100 text-gray-300' : 'bg-gray-50 text-gray-200'}`}
+                    >
+                      {aktiv && <span className="text-[12px]">✓</span>}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-[12px] font-medium truncate ${eligible ? 'text-secondary' : 'text-gray-400'}`}>
+                        {f.name}
+                      </p>
+                      {f.beschreibung && (
+                        <p className="text-[10px] text-gray-400 truncate">{f.beschreibung}</p>
+                      )}
+                      {!eligible && !aktiv && (
+                        <p className="text-[10px] text-amber-500 italic">Nicht anwendbar (Anlage/Komponente fehlt)</p>
+                      )}
+                    </div>
+                    {aktiv && (
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={customVal !== undefined ? customVal : auto.toFixed(2)}
+                        onChange={e => setFoerderungCustom(f.id, e.target.value)}
+                        className="w-20 text-right rounded border border-emerald-200 px-1.5 py-1 text-[12px] font-semibold text-emerald-700 bg-white"
+                      />
+                    )}
+                    {!aktiv && eligible && (
+                      <span className="text-[11px] text-gray-400 whitespace-nowrap">
+                        ~{auto.toLocaleString('de-AT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} €
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </Section>
+      )}
+
       {/* Notiz */}
       <Section title="Notizen">
         <textarea
@@ -542,15 +665,42 @@ export default function PvAngebotNeu() {
           </div>
           <div className="flex justify-between font-bold text-base mt-1">
             <span>Brutto</span>
-            <span className="text-primary">{totals.brutto.toLocaleString('de-AT', { minimumFractionDigits: 2 })} €</span>
+            <span>{totals.brutto.toLocaleString('de-AT', { minimumFractionDigits: 2 })} €</span>
           </div>
+
+          {foerderungSumme > 0 && (
+            <>
+              <div className="border-t border-white/20 mt-2 pt-2 space-y-0.5">
+                <p className="text-[10px] text-emerald-300 uppercase tracking-wider mb-1">Förderungen</p>
+                {aktiveFoerderungen.map(f => (
+                  <div key={f.id} className="flex justify-between text-emerald-200">
+                    <span className="text-[11px] truncate">– {f.name}</span>
+                    <span className="text-[11px]">−{Number(f._berechnet).toLocaleString('de-AT', { minimumFractionDigits: 2 })} €</span>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-white/20 mt-2 pt-2">
+                <div className="flex justify-between font-bold text-base">
+                  <span className="text-emerald-300">Endpreis nach Förderung</span>
+                  <span className="text-emerald-300">{endpreis.toLocaleString('de-AT', { minimumFractionDigits: 2 })} €</span>
+                </div>
+                <p className="text-[10px] text-emerald-300/80 text-right">
+                  Ersparnis: {foerderungSumme.toLocaleString('de-AT', { minimumFractionDigits: 2 })} €
+                </p>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
       {/* Actions */}
-      <div className="grid grid-cols-3 gap-2 pt-1">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
         <button onClick={() => setShowPreview(true)} disabled={gruppen.length === 0} className="btn-secondary">
           <Eye size={14} weight="fill" /> Vorschau
+        </button>
+        <button onClick={() => setShowPresentation(true)} disabled={gruppen.length === 0}
+          className="btn-secondary text-emerald-700 border-emerald-200">
+          <Presentation size={14} weight="fill" /> Kunden-Modus
         </button>
         <button onClick={() => handleSave(false)} disabled={saving} className="btn-secondary">
           {saving ? <SpinnerGap size={14} weight="bold" className="animate-spin" /> : <><FloppyDisk size={14} weight="fill" /> Speichern</>}
@@ -566,7 +716,26 @@ export default function PvAngebotNeu() {
           datum={datum}
           gruppen={gruppen}
           totals={totals}
+          foerderungen={aktiveFoerderungen}
+          foerderungSumme={foerderungSumme}
+          endpreis={endpreis}
           onClose={() => setShowPreview(false)}
+        />
+      )}
+
+      {showPresentation && (
+        <KundenPraesentation
+          kunde={kunde}
+          kwp={kwp}
+          speicherKwh={speicherEnabled ? speicherKwh : 0}
+          hatWallbox={!!wallbox}
+          hatHeizstab={!!heizstab}
+          gruppen={gruppen}
+          totals={totals}
+          foerderungen={aktiveFoerderungen}
+          foerderungSumme={foerderungSumme}
+          endpreis={endpreis}
+          onClose={() => setShowPresentation(false)}
         />
       )}
     </div>
