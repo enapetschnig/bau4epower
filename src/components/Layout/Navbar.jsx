@@ -1,13 +1,23 @@
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
-import { CaretDown, SignOut, User, House, DownloadSimple, Lock, ShieldCheck } from '@phosphor-icons/react'
+import { CaretDown, SignOut, User, House, DownloadSimple, Lock, ShieldCheck, ArrowsClockwise } from '@phosphor-icons/react'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import Logo from '../Logo.jsx'
 
 export default function Navbar() {
-  const { profile, fullName, isAdmin, signOut } = useAuth()
+  const { profile, fullName, isAdmin, role, signOut, refreshRole } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const [showInstall, setShowInstall] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+
+  async function handleRefreshRole() {
+    setRefreshing(true)
+    try {
+      await refreshRole?.()
+    } finally {
+      setRefreshing(false)
+    }
+  }
 
   const displayName = fullName || profile?.email || ''
   const firstName = displayName.split(' ')[0] || ''
@@ -55,7 +65,20 @@ export default function Navbar() {
                   <div className="absolute right-0 mt-1 w-56 bg-white border border-gray-100 rounded-lg shadow-lg z-40 py-1">
                     <div className="px-3 py-2 border-b border-gray-50">
                       <p className="text-[12px] font-semibold text-secondary truncate">{displayName}</p>
-                      <p className="text-[10px] text-gray-400">{isAdmin ? 'Administrator' : 'Mitarbeiter'}</p>
+                      <div className="flex items-center justify-between gap-2 mt-0.5">
+                        <p className="text-[10px] text-gray-400">
+                          {role === 'administrator' ? 'Administrator' : role === 'mitarbeiter' ? 'Mitarbeiter' : 'Lädt...'}
+                        </p>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleRefreshRole() }}
+                          disabled={refreshing}
+                          className="text-[10px] text-primary flex items-center gap-1 hover:underline"
+                          title="Rolle neu laden"
+                        >
+                          <ArrowsClockwise size={10} weight="bold" className={refreshing ? 'animate-spin' : ''} />
+                          {refreshing ? 'Lädt...' : 'Aktualisieren'}
+                        </button>
+                      </div>
                     </div>
                     <Link
                       to="/"
