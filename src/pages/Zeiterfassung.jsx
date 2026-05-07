@@ -11,6 +11,7 @@ import {
   loadZulagen, addEntryZulage, loadZulagenForEntries,
   uploadTimeEntryPhoto, calcZulageBetrag, ABRECHNUNGSARTEN,
 } from '../lib/zulagen.js'
+import ProjectCombobox from '../components/ProjectCombobox.jsx'
 
 const ABSENCE_TYPES = ['Urlaub', 'Krankenstand', 'Weiterbildung', 'Arztbesuch', 'Zeitausgleich']
 
@@ -558,15 +559,6 @@ export default function Zeiterfassung() {
 function BlockCard({ idx, block, blockCount, projects, onUpdate, onRemove, hours, onProjectCreated }) {
   const [showNewProject, setShowNewProject] = useState(false)
 
-  function handleProjectChange(e) {
-    const v = e.target.value
-    if (v === '__new__') {
-      setShowNewProject(true)
-    } else {
-      onUpdate('projectId', v)
-    }
-  }
-
   return (
     <div className="card relative">
       <div className="flex items-center justify-between mb-2">
@@ -593,15 +585,13 @@ function BlockCard({ idx, block, blockCount, projects, onUpdate, onRemove, hours
       <div className="space-y-2">
         <div>
           <label className="label block mb-0.5">Projekt / Baustelle</label>
-          <select
+          <ProjectCombobox
+            projects={projects}
             value={block.projectId}
-            onChange={handleProjectChange}
-            className="input-field"
-          >
-            <option value="">– kein Projekt –</option>
-            {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-            <option value="__new__">+ Neues Projekt anlegen...</option>
-          </select>
+            onChange={(id) => onUpdate('projectId', id)}
+            onCreateNew={() => setShowNewProject(true)}
+            placeholder="Projektnummer oder Name suchen..."
+          />
         </div>
 
         <div>
@@ -670,16 +660,25 @@ function BlockCard({ idx, block, blockCount, projects, onUpdate, onRemove, hours
 function QuickProjectDialog({ onClose, onCreated }) {
   const { user } = useAuth()
   const { showToast } = useToast()
-  const [form, setForm] = useState({ name: '', adresse: '', plz: '' })
+  const [form, setForm] = useState({ kunde_name: '', adresse: '', plz: '' })
   const [saving, setSaving] = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!form.name.trim()) return
+    if (!form.kunde_name.trim() && !form.adresse.trim()) {
+      showToast('Bitte Kundennamen oder Adresse angeben', 'error')
+      return
+    }
     setSaving(true)
     try {
-      const project = await createProject({ userId: user.id, ...form })
-      showToast('Projekt angelegt')
+      const project = await createProject({
+        userId: user.id,
+        kunde_name: form.kunde_name,
+        name: form.kunde_name || form.adresse || 'Projekt',
+        adresse: form.adresse,
+        plz: form.plz,
+      })
+      showToast(`Projekt ${project.projekt_nummer} angelegt`)
       onCreated(project)
     } catch (err) {
       showToast(err.message || 'Fehler beim Anlegen', 'error')
@@ -687,6 +686,8 @@ function QuickProjectDialog({ onClose, onCreated }) {
       setSaving(false)
     }
   }
+
+  const yr = new Date().getFullYear()
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4">
@@ -697,16 +698,23 @@ function QuickProjectDialog({ onClose, onCreated }) {
             <X size={18} />
           </button>
         </div>
+
+        <div className="bg-primary-50 rounded-lg px-3 py-2 mb-3">
+          <p className="text-[11px] text-gray-500">Projekt-Nummer</p>
+          <p className="text-[14px] font-bold text-primary font-mono">
+            {yr}xxxx <span className="text-[10px] text-gray-400 font-normal">(wird automatisch vergeben)</span>
+          </p>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-2.5">
           <div>
-            <label className="label block mb-0.5">Projektname *</label>
+            <label className="label block mb-0.5">Kundenname (optional)</label>
             <input
-              required
               autoFocus
-              value={form.name}
-              onChange={e => setForm({ ...form, name: e.target.value })}
+              value={form.kunde_name}
+              onChange={e => setForm({ ...form, kunde_name: e.target.value })}
               className="input-field"
-              placeholder="z.B. Bürohaus Mustermann"
+              placeholder="z.B. Familie Mustermann"
             />
           </div>
           <div>
@@ -734,7 +742,7 @@ function QuickProjectDialog({ onClose, onCreated }) {
             }
           </button>
           <p className="text-[10px] text-gray-400 text-center">
-            Das Projekt wird sofort dem Block zugewiesen
+            Projekt-Nr. wird automatisch vergeben und sofort zugewiesen
           </p>
         </form>
       </div>

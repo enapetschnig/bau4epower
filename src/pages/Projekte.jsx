@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, MagnifyingGlass, MapPin, Briefcase, X, SpinnerGap } from '@phosphor-icons/react'
+import { Plus, MagnifyingGlass, MapPin, Briefcase, X, SpinnerGap, CaretRight } from '@phosphor-icons/react'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useToast } from '../contexts/ToastContext.jsx'
-import { loadProjects, createProject, deleteProject, updateProject } from '../lib/projectRecords.js'
+import { loadProjects, createProject } from '../lib/projectRecords.js'
 
 export default function Projekte() {
-  const { user, isAdmin } = useAuth()
+  const { user } = useAuth()
   const { showToast } = useToast()
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
@@ -23,8 +23,8 @@ export default function Projekte() {
     try {
       const data = await loadProjects()
       setProjects(data)
-    } catch (err) {
-      showToast('Projekte konnten nicht geladen werden', 'error')
+    } catch {
+      // silent
     } finally {
       setLoading(false)
     }
@@ -34,13 +34,22 @@ export default function Projekte() {
     if (filter !== 'alle' && p.status !== filter) return false
     if (!search) return true
     const s = search.toLowerCase()
-    return (p.name || '').toLowerCase().includes(s) || (p.adresse || '').toLowerCase().includes(s)
+    return (
+      (p.projekt_nummer || '').toLowerCase().includes(s) ||
+      (p.kunde_name || '').toLowerCase().includes(s) ||
+      (p.name || '').toLowerCase().includes(s) ||
+      (p.adresse || '').toLowerCase().includes(s) ||
+      (p.plz || '').toLowerCase().includes(s)
+    )
   })
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-3">
+    <div className="max-w-3xl mx-auto px-4 py-3 pb-6">
       <div className="flex items-center justify-between mb-3">
-        <h1 className="text-lg font-bold text-secondary">Projekte</h1>
+        <div>
+          <h1 className="text-lg font-bold text-secondary">Projekte</h1>
+          <p className="text-[11px] text-gray-400">{projects.length} {projects.length === 1 ? 'Projekt' : 'Projekte'} gesamt</p>
+        </div>
         <button onClick={() => setShowNew(true)} className="btn-primary px-3">
           <Plus size={14} weight="bold" />
           Neu
@@ -52,11 +61,20 @@ export default function Projekte() {
           <MagnifyingGlass size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
           <input
             type="text"
-            placeholder="Projekt suchen..."
+            placeholder="Projektnr., Kunde, Adresse, PLZ..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="input-field pl-9"
+            inputMode="search"
           />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500"
+            >
+              <X size={14} weight="bold" />
+            </button>
+          )}
         </div>
 
         <div className="flex gap-px bg-gray-100 rounded-md p-0.5">
@@ -82,9 +100,17 @@ export default function Projekte() {
           <SpinnerGap size={28} weight="bold" className="text-primary animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-12 text-[13px] text-gray-400">
+        <div className="text-center py-12">
           <Briefcase size={36} weight="regular" className="mx-auto mb-2 text-gray-200" />
-          {search ? 'Keine Projekte gefunden' : 'Noch keine Projekte angelegt'}
+          <p className="text-[13px] text-gray-400">
+            {search ? 'Keine Projekte gefunden' : 'Noch keine Projekte angelegt'}
+          </p>
+          {!search && (
+            <button onClick={() => setShowNew(true)} className="btn-primary mt-3 inline-flex">
+              <Plus size={14} weight="bold" />
+              Erstes Projekt anlegen
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-2">
@@ -92,26 +118,38 @@ export default function Projekte() {
             <Link
               key={p.id}
               to={`/projekte/${p.id}`}
-              className="block bg-white rounded-lg border border-gray-100 p-3 active:bg-gray-50 transition-colors"
-              style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}
+              className="block bg-white rounded-lg border border-gray-100 p-3 active:bg-gray-50 hover:border-primary/30 transition-all group"
+              style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
             >
-              <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-3">
+                <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0
+                  ${p.status === 'aktiv' ? 'bg-primary-50' : 'bg-gray-100'}`}>
+                  <Briefcase
+                    size={20}
+                    weight="fill"
+                    className={p.status === 'aktiv' ? 'text-primary' : 'text-gray-400'}
+                  />
+                </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-[13px] font-semibold text-secondary truncate">{p.name}</h3>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-[10px] bg-primary-50 text-primary px-1.5 py-px rounded font-mono font-semibold">
+                      {p.projekt_nummer || '–'}
+                    </span>
+                    {p.status !== 'aktiv' && (
+                      <span className="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-px rounded">{p.status}</span>
+                    )}
+                  </div>
+                  <h3 className="text-[13px] font-semibold text-secondary truncate">
+                    {p.kunde_name || p.name || 'Unbenannt'}
+                  </h3>
                   {p.adresse && (
                     <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1 truncate">
-                      <MapPin size={11} />
+                      <MapPin size={10} />
                       {p.plz ? `${p.plz} ` : ''}{p.adresse}
                     </p>
                   )}
-                  {p.beschreibung && (
-                    <p className="text-[11px] text-gray-500 mt-1 line-clamp-2">{p.beschreibung}</p>
-                  )}
                 </div>
-                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded
-                  ${p.status === 'aktiv' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
-                  {p.status}
-                </span>
+                <CaretRight size={14} className="text-gray-300 flex-shrink-0 group-hover:text-primary transition-colors" />
               </div>
             </Link>
           ))}
@@ -131,16 +169,26 @@ export default function Projekte() {
 
 function NewProjectDialog({ onClose, onCreated, userId }) {
   const { showToast } = useToast()
-  const [form, setForm] = useState({ name: '', adresse: '', plz: '', beschreibung: '' })
+  const [form, setForm] = useState({ kunde_name: '', adresse: '', plz: '', beschreibung: '' })
   const [saving, setSaving] = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!form.name.trim()) return
+    if (!form.kunde_name.trim() && !form.adresse.trim()) {
+      showToast('Bitte Kundennamen oder Adresse angeben', 'error')
+      return
+    }
     setSaving(true)
     try {
-      await createProject({ userId, ...form })
-      showToast('Projekt angelegt')
+      const created = await createProject({
+        userId,
+        kunde_name: form.kunde_name,
+        name: form.kunde_name || form.adresse || 'Projekt',
+        adresse: form.adresse,
+        plz: form.plz,
+        beschreibung: form.beschreibung,
+      })
+      showToast(`Projekt ${created.projekt_nummer} angelegt`)
       onCreated()
     } catch (err) {
       showToast(err.message || 'Fehler beim Anlegen', 'error')
@@ -148,6 +196,8 @@ function NewProjectDialog({ onClose, onCreated, userId }) {
       setSaving(false)
     }
   }
+
+  const yr = new Date().getFullYear()
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4">
@@ -159,23 +209,27 @@ function NewProjectDialog({ onClose, onCreated, userId }) {
           </button>
         </div>
 
+        <div className="bg-primary-50 rounded-lg px-3 py-2 mb-3">
+          <p className="text-[11px] text-gray-500">Projekt-Nummer</p>
+          <p className="text-[14px] font-bold text-primary font-mono">
+            {yr}xxxx <span className="text-[10px] text-gray-400 font-normal">(wird automatisch vergeben)</span>
+          </p>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-2.5">
           <div>
-            <label className="label block mb-0.5">Projektname *</label>
+            <label className="label block mb-0.5">Kundenname (optional)</label>
             <input
-              required
               autoFocus
-              type="text"
-              value={form.name}
-              onChange={e => setForm({ ...form, name: e.target.value })}
+              value={form.kunde_name}
+              onChange={e => setForm({ ...form, kunde_name: e.target.value })}
               className="input-field"
-              placeholder="z.B. Bürohaus Mustermann"
+              placeholder="z.B. Familie Mustermann"
             />
           </div>
           <div>
             <label className="label block mb-0.5">Adresse</label>
             <input
-              type="text"
               value={form.adresse}
               onChange={e => setForm({ ...form, adresse: e.target.value })}
               className="input-field"
@@ -185,7 +239,6 @@ function NewProjectDialog({ onClose, onCreated, userId }) {
           <div>
             <label className="label block mb-0.5">PLZ / Ort</label>
             <input
-              type="text"
               value={form.plz}
               onChange={e => setForm({ ...form, plz: e.target.value })}
               className="input-field"
@@ -202,7 +255,10 @@ function NewProjectDialog({ onClose, onCreated, userId }) {
             />
           </div>
           <button type="submit" disabled={saving} className="btn-primary w-full mt-3">
-            {saving ? <SpinnerGap size={14} weight="bold" className="animate-spin" /> : 'Anlegen'}
+            {saving
+              ? <SpinnerGap size={14} weight="bold" className="animate-spin" />
+              : <><Plus size={14} weight="bold" /> Projekt anlegen</>
+            }
           </button>
         </form>
       </div>
