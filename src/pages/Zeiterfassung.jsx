@@ -5,8 +5,9 @@ import {
 } from '@phosphor-icons/react'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useToast } from '../contexts/ToastContext.jsx'
-import { loadProjects, createProject } from '../lib/projectRecords.js'
+import { loadProjects } from '../lib/projectRecords.js'
 import { createTimeEntry, loadMyTimeEntries, deleteTimeEntry } from '../lib/timeEntries.js'
+import ProjectDialog from '../components/ProjectDialog.jsx'
 import {
   loadZulagen, addEntryZulage, loadZulagenForEntries,
   uploadTimeEntryPhoto, calcZulageBetrag, ABRECHNUNGSARTEN,
@@ -27,7 +28,7 @@ function newBlock(suggestStart) {
 }
 
 export default function Zeiterfassung() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const { showToast } = useToast()
   const photoInputRef = useRef(null)
 
@@ -390,6 +391,7 @@ export default function Zeiterfassung() {
                 onRemove={() => removeBlock(idx)}
                 hours={calcBlockHours(b)}
                 onProjectCreated={(p) => setProjects(prev => [p, ...prev])}
+                defaultGewerk={profile?.default_gewerk}
               />
             ))}
 
@@ -556,7 +558,7 @@ export default function Zeiterfassung() {
   )
 }
 
-function BlockCard({ idx, block, blockCount, projects, onUpdate, onRemove, hours, onProjectCreated }) {
+function BlockCard({ idx, block, blockCount, projects, onUpdate, onRemove, hours, onProjectCreated, defaultGewerk }) {
   const [showNewProject, setShowNewProject] = useState(false)
 
   return (
@@ -644,7 +646,8 @@ function BlockCard({ idx, block, blockCount, projects, onUpdate, onRemove, hours
       </div>
 
       {showNewProject && (
-        <QuickProjectDialog
+        <ProjectDialog
+          defaultGewerk={defaultGewerk || 'elektro'}
           onClose={() => setShowNewProject(false)}
           onCreated={(p) => {
             setShowNewProject(false)
@@ -653,99 +656,6 @@ function BlockCard({ idx, block, blockCount, projects, onUpdate, onRemove, hours
           }}
         />
       )}
-    </div>
-  )
-}
-
-function QuickProjectDialog({ onClose, onCreated }) {
-  const { user } = useAuth()
-  const { showToast } = useToast()
-  const [form, setForm] = useState({ kunde_name: '', adresse: '', plz: '' })
-  const [saving, setSaving] = useState(false)
-
-  async function handleSubmit(e) {
-    e.preventDefault()
-    if (!form.kunde_name.trim() && !form.adresse.trim()) {
-      showToast('Bitte Kundennamen oder Adresse angeben', 'error')
-      return
-    }
-    setSaving(true)
-    try {
-      const project = await createProject({
-        userId: user.id,
-        kunde_name: form.kunde_name,
-        name: form.kunde_name || form.adresse || 'Projekt',
-        adresse: form.adresse,
-        plz: form.plz,
-      })
-      showToast(`Projekt ${project.projekt_nummer} angelegt`)
-      onCreated(project)
-    } catch (err) {
-      showToast(err.message || 'Fehler beim Anlegen', 'error')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const yr = new Date().getFullYear()
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4">
-      <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-xl p-4 max-h-[90vh] overflow-auto">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold text-secondary">Neues Projekt</h2>
-          <button onClick={onClose} className="touch-btn text-gray-400">
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="bg-primary-50 rounded-lg px-3 py-2 mb-3">
-          <p className="text-[11px] text-gray-500">Projekt-Nummer</p>
-          <p className="text-[14px] font-bold text-primary font-mono">
-            {yr}xxxx <span className="text-[10px] text-gray-400 font-normal">(wird automatisch vergeben)</span>
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-2.5">
-          <div>
-            <label className="label block mb-0.5">Kundenname (optional)</label>
-            <input
-              autoFocus
-              value={form.kunde_name}
-              onChange={e => setForm({ ...form, kunde_name: e.target.value })}
-              className="input-field"
-              placeholder="z.B. Familie Mustermann"
-            />
-          </div>
-          <div>
-            <label className="label block mb-0.5">Adresse</label>
-            <input
-              value={form.adresse}
-              onChange={e => setForm({ ...form, adresse: e.target.value })}
-              className="input-field"
-              placeholder="Straße + Hausnummer"
-            />
-          </div>
-          <div>
-            <label className="label block mb-0.5">PLZ / Ort</label>
-            <input
-              value={form.plz}
-              onChange={e => setForm({ ...form, plz: e.target.value })}
-              className="input-field"
-              placeholder="z.B. 8841 Frojach"
-            />
-          </div>
-          <button type="submit" disabled={saving} className="btn-primary w-full mt-3">
-            {saving
-              ? <SpinnerGap size={14} weight="bold" className="animate-spin" />
-              : <><Plus size={14} weight="bold" /> Anlegen & verwenden</>
-            }
-          </button>
-          <p className="text-[10px] text-gray-400 text-center">
-            Projekt-Nr. wird automatisch vergeben und sofort zugewiesen
-          </p>
-        </form>
-      </div>
     </div>
   )
 }

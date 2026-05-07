@@ -1,25 +1,24 @@
 import { useState, useRef, useEffect } from 'react'
-import { MagnifyingGlass, CaretDown, X, Plus, Briefcase, Check } from '@phosphor-icons/react'
+import { MagnifyingGlass, CaretDown, X, Plus, Briefcase, Check, Lightning, SunHorizon, Wrench } from '@phosphor-icons/react'
+import { GEWERKE, gewerkKurz } from '../lib/projectRecords.js'
 
-/**
- * Suchbares Projekt-Dropdown.
- *
- * Props:
- *   projects: Project[]
- *   value: projectId | ''
- *   onChange: (id) => void
- *   onCreateNew: () => void  (optional - zeigt "+ Neues Projekt" Eintrag)
- *   placeholder: string
- */
+const GEWERK_ICONS = {
+  elektro: { Icon: Lightning, color: 'text-amber-600', bg: 'bg-amber-100' },
+  pv: { Icon: SunHorizon, color: 'text-emerald-600', bg: 'bg-emerald-100' },
+  installateur: { Icon: Wrench, color: 'text-blue-600', bg: 'bg-blue-100' },
+}
+
 export default function ProjectCombobox({
   projects = [],
   value,
   onChange,
   onCreateNew,
   placeholder = 'Projekt suchen oder auswählen...',
+  defaultGewerk = null,
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
+  const [filterGewerk, setFilterGewerk] = useState(defaultGewerk || 'alle')
   const ref = useRef(null)
   const inputRef = useRef(null)
 
@@ -41,14 +40,16 @@ export default function ProjectCombobox({
   }, [open])
 
   const q = query.trim().toLowerCase()
-  const filtered = !q
-    ? projects
-    : projects.filter(p =>
-        (p.projekt_nummer || '').toLowerCase().includes(q) ||
-        (p.kunde_name || '').toLowerCase().includes(q) ||
-        (p.name || '').toLowerCase().includes(q) ||
-        (p.adresse || '').toLowerCase().includes(q)
-      )
+  const filtered = projects.filter(p => {
+    if (filterGewerk !== 'alle' && p.gewerk !== filterGewerk) return false
+    if (!q) return true
+    return (
+      (p.projekt_nummer || '').toLowerCase().includes(q) ||
+      (p.kunde_name || '').toLowerCase().includes(q) ||
+      (p.name || '').toLowerCase().includes(q) ||
+      (p.adresse || '').toLowerCase().includes(q)
+    )
+  })
 
   function handleSelect(id) {
     onChange(id)
@@ -56,9 +57,10 @@ export default function ProjectCombobox({
     setQuery('')
   }
 
+  const selCfg = selected ? GEWERK_ICONS[selected.gewerk] : null
+
   return (
     <div ref={ref} className="relative">
-      {/* Display Button */}
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
@@ -70,6 +72,9 @@ export default function ProjectCombobox({
               <span className="text-[10px] bg-primary-50 text-primary px-1.5 py-px rounded font-mono font-semibold flex-shrink-0">
                 {selected.projekt_nummer}
               </span>
+              {selCfg && (
+                <selCfg.Icon size={12} weight="fill" className={`${selCfg.color} flex-shrink-0`} />
+              )}
               <span className="text-secondary truncate">
                 {selected.kunde_name || selected.name || ''}
               </span>
@@ -90,12 +95,13 @@ export default function ProjectCombobox({
         )}
       </button>
 
-      {/* Dropdown */}
       {open && (
-        <div className="absolute z-30 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-hidden flex flex-col"
-          style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
+        <div
+          className="absolute z-30 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-hidden flex flex-col"
+          style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
+        >
           {/* Search */}
-          <div className="p-2 border-b border-gray-100 bg-gray-50">
+          <div className="p-2 border-b border-gray-100 bg-gray-50 space-y-2">
             <div className="relative">
               <MagnifyingGlass size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-300" />
               <input
@@ -107,11 +113,38 @@ export default function ProjectCombobox({
                 className="w-full bg-white border border-gray-200 rounded-md pl-7 pr-2 py-1.5 text-[12px] focus:outline-none focus:border-primary"
               />
             </div>
+
+            {/* Gewerk-Filter Chips */}
+            <div className="grid grid-cols-4 gap-1">
+              <button
+                type="button"
+                onClick={() => setFilterGewerk('alle')}
+                className={`py-1 text-[10px] font-semibold rounded transition-colors
+                  ${filterGewerk === 'alle' ? 'bg-secondary text-white' : 'bg-white text-gray-400 border border-gray-200'}`}
+              >
+                Alle
+              </button>
+              {GEWERKE.map(g => {
+                const cfg = GEWERK_ICONS[g.v]
+                const active = filterGewerk === g.v
+                return (
+                  <button
+                    key={g.v}
+                    type="button"
+                    onClick={() => setFilterGewerk(g.v)}
+                    className={`py-1 text-[10px] font-semibold rounded transition-colors flex items-center justify-center gap-1
+                      ${active ? `${cfg.bg} ${cfg.color}` : 'bg-white text-gray-400 border border-gray-200'}`}
+                  >
+                    <cfg.Icon size={10} weight="fill" />
+                    {g.kurz}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {/* Options */}
           <div className="overflow-y-auto flex-1">
-            {/* "Kein Projekt" Option */}
             <button
               type="button"
               onClick={() => handleSelect('')}
@@ -128,46 +161,49 @@ export default function ProjectCombobox({
                 <p className="text-[11px] text-gray-400">Keine Projekte gefunden</p>
               </div>
             ) : (
-              filtered.map(p => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => handleSelect(p.id)}
-                  className={`w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors flex items-start gap-2
-                    ${value === p.id ? 'bg-primary-50' : ''}`}
-                >
-                  {value === p.id ? (
-                    <Check size={12} weight="bold" className="text-primary mt-1 flex-shrink-0" />
-                  ) : (
-                    <span className="w-3 mt-1 flex-shrink-0" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-[10px] bg-primary-50 text-primary px-1.5 py-px rounded font-mono font-semibold">
-                        {p.projekt_nummer}
-                      </span>
-                      {p.status !== 'aktiv' && (
-                        <span className="text-[9px] bg-gray-100 text-gray-500 px-1 py-px rounded">{p.status}</span>
+              filtered.map(p => {
+                const cfg = GEWERK_ICONS[p.gewerk] || GEWERK_ICONS.elektro
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => handleSelect(p.id)}
+                    className={`w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors flex items-start gap-2
+                      ${value === p.id ? 'bg-primary-50' : ''}`}
+                  >
+                    {value === p.id ? (
+                      <Check size={12} weight="bold" className="text-primary mt-1 flex-shrink-0" />
+                    ) : (
+                      <span className="w-3 mt-1 flex-shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className="text-[10px] bg-primary-50 text-primary px-1.5 py-px rounded font-mono font-semibold">
+                          {p.projekt_nummer}
+                        </span>
+                        <span className={`text-[9px] ${cfg.bg} ${cfg.color} px-1 py-px rounded font-medium flex items-center gap-0.5`}>
+                          <cfg.Icon size={9} weight="fill" />
+                          {gewerkKurz(p.gewerk)}
+                        </span>
+                      </div>
+                      {p.kunde_name && (
+                        <p className="text-[12px] font-semibold text-secondary truncate">{p.kunde_name}</p>
+                      )}
+                      {p.name && p.name !== p.kunde_name && (
+                        <p className="text-[11px] text-gray-500 truncate">{p.name}</p>
+                      )}
+                      {p.adresse && (
+                        <p className="text-[10px] text-gray-400 truncate">
+                          {p.plz ? `${p.plz} ` : ''}{p.adresse}
+                        </p>
                       )}
                     </div>
-                    {p.kunde_name && (
-                      <p className="text-[12px] font-semibold text-secondary truncate">{p.kunde_name}</p>
-                    )}
-                    {p.name && p.name !== p.kunde_name && (
-                      <p className="text-[11px] text-gray-500 truncate">{p.name}</p>
-                    )}
-                    {p.adresse && (
-                      <p className="text-[10px] text-gray-400 truncate">
-                        {p.plz ? `${p.plz} ` : ''}{p.adresse}
-                      </p>
-                    )}
-                  </div>
-                </button>
-              ))
+                  </button>
+                )
+              })
             )}
           </div>
 
-          {/* Create New */}
           {onCreateNew && (
             <button
               type="button"

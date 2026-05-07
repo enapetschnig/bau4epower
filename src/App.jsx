@@ -20,6 +20,7 @@ import PvAngeboteListe from './pages/PvAngeboteListe.jsx'
 import PvAngebotNeu from './pages/PvAngebotNeu.jsx'
 import PvMaterial from './pages/PvMaterial.jsx'
 import ZulagenAdmin from './pages/ZulagenAdmin.jsx'
+import Admin from './pages/Admin.jsx'
 import Einstellungen from './pages/Einstellungen.jsx'
 import AngebotView from './pages/Angebot.jsx'
 import BesprechungHub from './pages/BesprechungHub.jsx'
@@ -72,6 +73,7 @@ function ProtectedRoutes() {
         <Route path="mitarbeiter/:employeeId/dokumente" element={<MitarbeiterDokumente />} />
         <Route path="auswertung" element={<Auswertung />} />
         <Route path="zulagen" element={<ZulagenAdmin />} />
+        <Route path="admin" element={<Admin />} />
 
         {/* PV-Angebote */}
         <Route path="angebote" element={<PvAngeboteListe />} />
@@ -91,7 +93,6 @@ function ProtectedRoutes() {
         <Route path="vorlagen" element={<Navigate to="/kalkulation?modus=vorlagen" replace />} />
         <Route path="katalog" element={<Navigate to="/kalkulation?modus=preisliste" replace />} />
         <Route path="delegieren" element={<Navigate to="/" replace />} />
-        <Route path="admin" element={<Navigate to="/einstellungen" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

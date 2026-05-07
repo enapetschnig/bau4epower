@@ -1,17 +1,25 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, MagnifyingGlass, MapPin, Briefcase, X, SpinnerGap, CaretRight } from '@phosphor-icons/react'
+import { Plus, MagnifyingGlass, MapPin, Briefcase, X, SpinnerGap, CaretRight, Lightning, SunHorizon, Wrench } from '@phosphor-icons/react'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useToast } from '../contexts/ToastContext.jsx'
-import { loadProjects, createProject } from '../lib/projectRecords.js'
+import { loadProjects, GEWERKE, gewerkLabel, gewerkKurz } from '../lib/projectRecords.js'
+import ProjectDialog from '../components/ProjectDialog.jsx'
+
+const GEWERK_ICONS = {
+  elektro: { Icon: Lightning, color: 'text-amber-600', bg: 'bg-amber-100' },
+  pv: { Icon: SunHorizon, color: 'text-emerald-600', bg: 'bg-emerald-100' },
+  installateur: { Icon: Wrench, color: 'text-blue-600', bg: 'bg-blue-100' },
+}
 
 export default function Projekte() {
-  const { user } = useAuth()
+  const { profile } = useAuth()
   const { showToast } = useToast()
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('aktiv')
+  const [filterGewerk, setFilterGewerk] = useState('alle')
   const [showNew, setShowNew] = useState(false)
 
   useEffect(() => {
@@ -32,6 +40,7 @@ export default function Projekte() {
 
   const filtered = projects.filter(p => {
     if (filter !== 'alle' && p.status !== filter) return false
+    if (filterGewerk !== 'alle' && p.gewerk !== filterGewerk) return false
     if (!search) return true
     const s = search.toLowerCase()
     return (
@@ -42,6 +51,14 @@ export default function Projekte() {
       (p.plz || '').toLowerCase().includes(s)
     )
   })
+
+  // Counts pro Gewerk
+  const gewerkCounts = projects.reduce((acc, p) => {
+    if (filter === 'alle' || p.status === filter) {
+      acc[p.gewerk || 'unbekannt'] = (acc[p.gewerk || 'unbekannt'] || 0) + 1
+    }
+    return acc
+  }, {})
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-3 pb-6">
@@ -57,6 +74,7 @@ export default function Projekte() {
       </div>
 
       <div className="space-y-2 mb-3">
+        {/* Search */}
         <div className="relative">
           <MagnifyingGlass size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
           <input
@@ -77,6 +95,27 @@ export default function Projekte() {
           )}
         </div>
 
+        {/* Gewerk-Filter */}
+        <div className="grid grid-cols-4 gap-1.5">
+          <GewerkChip
+            active={filterGewerk === 'alle'}
+            onClick={() => setFilterGewerk('alle')}
+            label="Alle"
+            count={projects.filter(p => filter === 'alle' || p.status === filter).length}
+          />
+          {GEWERKE.map(g => (
+            <GewerkChip
+              key={g.v}
+              gewerk={g.v}
+              active={filterGewerk === g.v}
+              onClick={() => setFilterGewerk(g.v)}
+              label={g.kurz}
+              count={gewerkCounts[g.v] || 0}
+            />
+          ))}
+        </div>
+
+        {/* Status-Filter */}
         <div className="flex gap-px bg-gray-100 rounded-md p-0.5">
           {[
             { v: 'aktiv', l: 'Aktiv' },
@@ -86,7 +125,7 @@ export default function Projekte() {
             <button
               key={f.v}
               onClick={() => setFilter(f.v)}
-              className={`flex-1 py-1.5 text-[12px] font-medium rounded-[5px] transition-all
+              className={`flex-1 py-1.5 text-[11px] font-medium rounded-[5px] transition-all
                 ${filter === f.v ? 'bg-white text-secondary shadow-sm' : 'text-gray-400'}`}
             >
               {f.l}
@@ -103,9 +142,9 @@ export default function Projekte() {
         <div className="text-center py-12">
           <Briefcase size={36} weight="regular" className="mx-auto mb-2 text-gray-200" />
           <p className="text-[13px] text-gray-400">
-            {search ? 'Keine Projekte gefunden' : 'Noch keine Projekte angelegt'}
+            {search || filterGewerk !== 'alle' ? 'Keine Projekte gefunden' : 'Noch keine Projekte angelegt'}
           </p>
-          {!search && (
+          {!search && filterGewerk === 'alle' && (
             <button onClick={() => setShowNew(true)} className="btn-primary mt-3 inline-flex">
               <Plus size={14} weight="bold" />
               Erstes Projekt anlegen
@@ -114,154 +153,78 @@ export default function Projekte() {
         </div>
       ) : (
         <div className="space-y-2">
-          {filtered.map(p => (
-            <Link
-              key={p.id}
-              to={`/projekte/${p.id}`}
-              className="block bg-white rounded-lg border border-gray-100 p-3 active:bg-gray-50 hover:border-primary/30 transition-all group"
-              style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0
-                  ${p.status === 'aktiv' ? 'bg-primary-50' : 'bg-gray-100'}`}>
-                  <Briefcase
-                    size={20}
-                    weight="fill"
-                    className={p.status === 'aktiv' ? 'text-primary' : 'text-gray-400'}
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-[10px] bg-primary-50 text-primary px-1.5 py-px rounded font-mono font-semibold">
-                      {p.projekt_nummer || '–'}
-                    </span>
-                    {p.status !== 'aktiv' && (
-                      <span className="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-px rounded">{p.status}</span>
+          {filtered.map(p => {
+            const cfg = GEWERK_ICONS[p.gewerk] || GEWERK_ICONS.elektro
+            return (
+              <Link
+                key={p.id}
+                to={`/projekte/${p.id}`}
+                className="block bg-white rounded-lg border border-gray-100 p-3 active:bg-gray-50 hover:border-primary/30 transition-all group"
+                style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-12 h-12 ${cfg.bg} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                    <cfg.Icon size={20} weight="fill" className={cfg.color} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-[10px] bg-primary-50 text-primary px-1.5 py-px rounded font-mono font-semibold">
+                        {p.projekt_nummer || '–'}
+                      </span>
+                      <span className={`text-[9px] ${cfg.bg} ${cfg.color} px-1.5 py-px rounded font-medium`}>
+                        {gewerkKurz(p.gewerk)}
+                      </span>
+                      {p.status !== 'aktiv' && (
+                        <span className="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-px rounded">{p.status}</span>
+                      )}
+                    </div>
+                    <h3 className="text-[13px] font-semibold text-secondary truncate">
+                      {p.kunde_name || p.name || 'Unbenannt'}
+                    </h3>
+                    {p.adresse && (
+                      <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1 truncate">
+                        <MapPin size={10} />
+                        {p.plz ? `${p.plz} ` : ''}{p.adresse}
+                      </p>
                     )}
                   </div>
-                  <h3 className="text-[13px] font-semibold text-secondary truncate">
-                    {p.kunde_name || p.name || 'Unbenannt'}
-                  </h3>
-                  {p.adresse && (
-                    <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1 truncate">
-                      <MapPin size={10} />
-                      {p.plz ? `${p.plz} ` : ''}{p.adresse}
-                    </p>
-                  )}
+                  <CaretRight size={14} className="text-gray-300 flex-shrink-0 group-hover:text-primary transition-colors" />
                 </div>
-                <CaretRight size={14} className="text-gray-300 flex-shrink-0 group-hover:text-primary transition-colors" />
-              </div>
-            </Link>
-          ))}
+              </Link>
+            )
+          })}
         </div>
       )}
 
       {showNew && (
-        <NewProjectDialog
+        <ProjectDialog
+          defaultGewerk={profile?.default_gewerk || 'elektro'}
           onClose={() => setShowNew(false)}
           onCreated={() => { setShowNew(false); refresh() }}
-          userId={user?.id}
         />
       )}
     </div>
   )
 }
 
-function NewProjectDialog({ onClose, onCreated, userId }) {
-  const { showToast } = useToast()
-  const [form, setForm] = useState({ kunde_name: '', adresse: '', plz: '', beschreibung: '' })
-  const [saving, setSaving] = useState(false)
-
-  async function handleSubmit(e) {
-    e.preventDefault()
-    if (!form.kunde_name.trim() && !form.adresse.trim()) {
-      showToast('Bitte Kundennamen oder Adresse angeben', 'error')
-      return
-    }
-    setSaving(true)
-    try {
-      const created = await createProject({
-        userId,
-        kunde_name: form.kunde_name,
-        name: form.kunde_name || form.adresse || 'Projekt',
-        adresse: form.adresse,
-        plz: form.plz,
-        beschreibung: form.beschreibung,
-      })
-      showToast(`Projekt ${created.projekt_nummer} angelegt`)
-      onCreated()
-    } catch (err) {
-      showToast(err.message || 'Fehler beim Anlegen', 'error')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const yr = new Date().getFullYear()
-
+function GewerkChip({ gewerk, active, onClick, label, count }) {
+  const cfg = gewerk ? GEWERK_ICONS[gewerk] : null
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4">
-      <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-xl p-4 max-h-[90vh] overflow-auto">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold text-secondary">Neues Projekt</h2>
-          <button onClick={onClose} className="touch-btn text-gray-400">
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="bg-primary-50 rounded-lg px-3 py-2 mb-3">
-          <p className="text-[11px] text-gray-500">Projekt-Nummer</p>
-          <p className="text-[14px] font-bold text-primary font-mono">
-            {yr}xxxx <span className="text-[10px] text-gray-400 font-normal">(wird automatisch vergeben)</span>
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-2.5">
-          <div>
-            <label className="label block mb-0.5">Kundenname (optional)</label>
-            <input
-              autoFocus
-              value={form.kunde_name}
-              onChange={e => setForm({ ...form, kunde_name: e.target.value })}
-              className="input-field"
-              placeholder="z.B. Familie Mustermann"
-            />
-          </div>
-          <div>
-            <label className="label block mb-0.5">Adresse</label>
-            <input
-              value={form.adresse}
-              onChange={e => setForm({ ...form, adresse: e.target.value })}
-              className="input-field"
-              placeholder="Straße + Hausnummer"
-            />
-          </div>
-          <div>
-            <label className="label block mb-0.5">PLZ / Ort</label>
-            <input
-              value={form.plz}
-              onChange={e => setForm({ ...form, plz: e.target.value })}
-              className="input-field"
-              placeholder="z.B. 8841 Frojach"
-            />
-          </div>
-          <div>
-            <label className="label block mb-0.5">Beschreibung</label>
-            <textarea
-              value={form.beschreibung}
-              onChange={e => setForm({ ...form, beschreibung: e.target.value })}
-              className="input-field min-h-[60px]"
-              placeholder="Optional"
-            />
-          </div>
-          <button type="submit" disabled={saving} className="btn-primary w-full mt-3">
-            {saving
-              ? <SpinnerGap size={14} weight="bold" className="animate-spin" />
-              : <><Plus size={14} weight="bold" /> Projekt anlegen</>
-            }
-          </button>
-        </form>
-      </div>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex flex-col items-center justify-center py-2 rounded-lg border-2 transition-all
+        ${active
+          ? cfg
+            ? `${cfg.bg} border-current ${cfg.color}`
+            : 'bg-primary-50 border-primary text-primary'
+          : 'bg-white border-gray-200 text-gray-400'}`}
+    >
+      {cfg && <cfg.Icon size={14} weight="fill" className={active ? cfg.color : 'text-gray-300'} />}
+      <span className="text-[10px] font-semibold mt-0.5">{label}</span>
+      {count !== undefined && (
+        <span className="text-[9px] opacity-70">{count}</span>
+      )}
+    </button>
   )
 }

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import {
   Briefcase, Clock, FileText, UsersThree, ChartLine, Wrench,
-  FolderOpen, GearSix, CaretRight, Coin, SunHorizon,
+  FolderOpen, GearSix, CaretRight, Coin, SunHorizon, ShieldCheck,
 } from '@phosphor-icons/react'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { supabase } from '../lib/supabase.js'
@@ -75,6 +75,10 @@ export default function Home() {
   ]
 
   const adminTiles = [
+    {
+      to: '/admin', label: 'Admin-Übersicht', desc: 'Zentrales Admin-Dashboard',
+      Icon: ShieldCheck, gradient: 'from-rose-600 to-red-700',
+    },
     {
       to: '/auswertung', label: 'Stundenauswertung', desc: 'Analyse & Excel-Export',
       Icon: ChartLine, gradient: 'from-rose-500 to-pink-600',

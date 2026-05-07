@@ -1,8 +1,15 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, X, SpinnerGap, UserCircle, Trash, PencilSimple, FolderOpen } from '@phosphor-icons/react'
+import { Plus, X, SpinnerGap, UserCircle, Trash, PencilSimple, FolderOpen, Lightning, SunHorizon, Wrench } from '@phosphor-icons/react'
 import { useToast } from '../contexts/ToastContext.jsx'
 import { loadEmployees, createEmployee, updateEmployee, deleteEmployee } from '../lib/employees.js'
+import { GEWERKE, gewerkKurz } from '../lib/projectRecords.js'
+
+const GEWERK_ICONS = {
+  elektro: { Icon: Lightning, color: 'text-amber-600', bg: 'bg-amber-100' },
+  pv: { Icon: SunHorizon, color: 'text-emerald-600', bg: 'bg-emerald-100' },
+  installateur: { Icon: Wrench, color: 'text-blue-600', bg: 'bg-blue-100' },
+}
 
 export default function Mitarbeiter() {
   const { showToast } = useToast()
@@ -114,6 +121,7 @@ function EmployeeDialog({ employee, onClose, onSaved }) {
     email: employee?.email || '',
     telefon: employee?.telefon || '',
     position: employee?.position || '',
+    default_gewerk: employee?.default_gewerk || 'elektro',
     stundenlohn: employee?.stundenlohn || '',
     eintritt_datum: employee?.eintritt_datum || '',
     sv_nummer: employee?.sv_nummer || '',
@@ -173,6 +181,31 @@ function EmployeeDialog({ employee, onClose, onSaved }) {
             onChange={e => setForm({ ...form, telefon: e.target.value })} className="input-field" />
           <input placeholder="Position (z.B. Elektriker)" value={form.position}
             onChange={e => setForm({ ...form, position: e.target.value })} className="input-field" />
+
+          <div>
+            <label className="label block mb-1">Standard-Gewerk</label>
+            <p className="text-[10px] text-gray-400 mb-1.5">
+              Wird beim Anlegen neuer Projekte vorausgewählt
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {GEWERKE.map(g => {
+                const cfg = GEWERK_ICONS[g.v]
+                const active = form.default_gewerk === g.v
+                return (
+                  <button
+                    key={g.v}
+                    type="button"
+                    onClick={() => setForm({ ...form, default_gewerk: g.v })}
+                    className={`flex flex-col items-center justify-center gap-1 py-2 rounded-lg border-2 transition-all
+                      ${active ? `${cfg.bg} border-current ${cfg.color}` : 'border-gray-200 bg-white text-gray-400'}`}
+                  >
+                    <cfg.Icon size={16} weight="fill" className={active ? cfg.color : 'text-gray-300'} />
+                    <span className="text-[10px] font-semibold">{g.kurz}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
           <div className="grid grid-cols-2 gap-2">
             <input type="number" step="0.01" placeholder="Stundenlohn €" value={form.stundenlohn}
               onChange={e => setForm({ ...form, stundenlohn: e.target.value })} className="input-field" />

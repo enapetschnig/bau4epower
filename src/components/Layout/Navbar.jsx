@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
-import { CaretDown, SignOut, User, House, DownloadSimple, Lock } from '@phosphor-icons/react'
+import { CaretDown, SignOut, User, House, DownloadSimple, Lock, ShieldCheck } from '@phosphor-icons/react'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import Logo from '../Logo.jsx'
 
@@ -65,6 +65,16 @@ export default function Navbar() {
                       <House size={14} />
                       Startseite
                     </Link>
+                    {isAdmin && (
+                      <Link
+                        to="/admin"
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 text-[12px] text-rose-600 font-medium hover:bg-rose-50"
+                      >
+                        <ShieldCheck size={14} weight="fill" />
+                        Administrator-Bereich
+                      </Link>
+                    )}
                     <button
                       onClick={() => { setMenuOpen(false); setShowInstall(true) }}
                       className="flex items-center gap-2 px-3 py-2 text-[12px] text-secondary hover:bg-gray-50 w-full text-left"
