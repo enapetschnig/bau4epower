@@ -5,7 +5,7 @@ import {
 } from '@phosphor-icons/react'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useToast } from '../contexts/ToastContext.jsx'
-import { loadProjects } from '../lib/projectRecords.js'
+import { loadProjects, createProject } from '../lib/projectRecords.js'
 import { createTimeEntry, loadMyTimeEntries, deleteTimeEntry } from '../lib/timeEntries.js'
 import {
   loadZulagen, addEntryZulage, loadZulagenForEntries,
@@ -388,6 +388,7 @@ export default function Zeiterfassung() {
                 onUpdate={(field, val) => updateBlock(idx, field, val)}
                 onRemove={() => removeBlock(idx)}
                 hours={calcBlockHours(b)}
+                onProjectCreated={(p) => setProjects(prev => [p, ...prev])}
               />
             ))}
 
@@ -554,7 +555,18 @@ export default function Zeiterfassung() {
   )
 }
 
-function BlockCard({ idx, block, blockCount, projects, onUpdate, onRemove, hours }) {
+function BlockCard({ idx, block, blockCount, projects, onUpdate, onRemove, hours, onProjectCreated }) {
+  const [showNewProject, setShowNewProject] = useState(false)
+
+  function handleProjectChange(e) {
+    const v = e.target.value
+    if (v === '__new__') {
+      setShowNewProject(true)
+    } else {
+      onUpdate('projectId', v)
+    }
+  }
+
   return (
     <div className="card relative">
       <div className="flex items-center justify-between mb-2">
@@ -583,11 +595,12 @@ function BlockCard({ idx, block, blockCount, projects, onUpdate, onRemove, hours
           <label className="label block mb-0.5">Projekt / Baustelle</label>
           <select
             value={block.projectId}
-            onChange={e => onUpdate('projectId', e.target.value)}
+            onChange={handleProjectChange}
             className="input-field"
           >
             <option value="">– kein Projekt –</option>
             {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            <option value="__new__">+ Neues Projekt anlegen...</option>
           </select>
         </div>
 
@@ -606,6 +619,7 @@ function BlockCard({ idx, block, blockCount, projects, onUpdate, onRemove, hours
             <label className="label block mb-0.5">Von</label>
             <input
               type="time"
+              step="900"
               value={block.startTime}
               onChange={e => onUpdate('startTime', e.target.value)}
               className="input-field"
@@ -615,6 +629,7 @@ function BlockCard({ idx, block, blockCount, projects, onUpdate, onRemove, hours
             <label className="label block mb-0.5">Bis</label>
             <input
               type="time"
+              step="900"
               value={block.endTime}
               onChange={e => onUpdate('endTime', e.target.value)}
               className="input-field"
@@ -622,15 +637,106 @@ function BlockCard({ idx, block, blockCount, projects, onUpdate, onRemove, hours
           </div>
           <div>
             <label className="label block mb-0.5">Pause min</label>
-            <input
-              type="number"
+            <select
               value={block.pauseMinutes}
               onChange={e => onUpdate('pauseMinutes', e.target.value)}
               className="input-field"
-              placeholder="0"
-            />
+            >
+              <option value="0">0</option>
+              <option value="15">15</option>
+              <option value="30">30</option>
+              <option value="45">45</option>
+              <option value="60">60</option>
+              <option value="90">90</option>
+            </select>
           </div>
         </div>
+      </div>
+
+      {showNewProject && (
+        <QuickProjectDialog
+          onClose={() => setShowNewProject(false)}
+          onCreated={(p) => {
+            setShowNewProject(false)
+            onProjectCreated(p)
+            onUpdate('projectId', p.id)
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+function QuickProjectDialog({ onClose, onCreated }) {
+  const { user } = useAuth()
+  const { showToast } = useToast()
+  const [form, setForm] = useState({ name: '', adresse: '', plz: '' })
+  const [saving, setSaving] = useState(false)
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!form.name.trim()) return
+    setSaving(true)
+    try {
+      const project = await createProject({ userId: user.id, ...form })
+      showToast('Projekt angelegt')
+      onCreated(project)
+    } catch (err) {
+      showToast(err.message || 'Fehler beim Anlegen', 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4">
+      <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-xl p-4 max-h-[90vh] overflow-auto">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-bold text-secondary">Neues Projekt</h2>
+          <button onClick={onClose} className="touch-btn text-gray-400">
+            <X size={18} />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-2.5">
+          <div>
+            <label className="label block mb-0.5">Projektname *</label>
+            <input
+              required
+              autoFocus
+              value={form.name}
+              onChange={e => setForm({ ...form, name: e.target.value })}
+              className="input-field"
+              placeholder="z.B. Bürohaus Mustermann"
+            />
+          </div>
+          <div>
+            <label className="label block mb-0.5">Adresse</label>
+            <input
+              value={form.adresse}
+              onChange={e => setForm({ ...form, adresse: e.target.value })}
+              className="input-field"
+              placeholder="Straße + Hausnummer"
+            />
+          </div>
+          <div>
+            <label className="label block mb-0.5">PLZ / Ort</label>
+            <input
+              value={form.plz}
+              onChange={e => setForm({ ...form, plz: e.target.value })}
+              className="input-field"
+              placeholder="z.B. 8841 Frojach"
+            />
+          </div>
+          <button type="submit" disabled={saving} className="btn-primary w-full mt-3">
+            {saving
+              ? <SpinnerGap size={14} weight="bold" className="animate-spin" />
+              : <><Plus size={14} weight="bold" /> Anlegen & verwenden</>
+            }
+          </button>
+          <p className="text-[10px] text-gray-400 text-center">
+            Das Projekt wird sofort dem Block zugewiesen
+          </p>
+        </form>
       </div>
     </div>
   )
