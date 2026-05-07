@@ -1,18 +1,19 @@
 import { useState, useEffect, useRef } from 'react'
 import {
   Plus, X, SpinnerGap, Trash, Camera, Coin, CaretDown, CaretUp,
-  Buildings, Wrench, Calendar, Clock, Check,
+  Buildings, Wrench, Calendar, Check,
 } from '@phosphor-icons/react'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useToast } from '../contexts/ToastContext.jsx'
 import { loadProjects } from '../lib/projectRecords.js'
 import { createTimeEntry, loadMyTimeEntries, deleteTimeEntry } from '../lib/timeEntries.js'
-import ProjectDialog from '../components/ProjectDialog.jsx'
 import {
   loadZulagen, addEntryZulage, loadZulagenForEntries,
   uploadTimeEntryPhoto, calcZulageBetrag, ABRECHNUNGSARTEN,
 } from '../lib/zulagen.js'
 import ProjectCombobox from '../components/ProjectCombobox.jsx'
+import ProjectDialog from '../components/ProjectDialog.jsx'
+import TimePicker15 from '../components/TimePicker15.jsx'
 
 const ABSENCE_TYPES = ['Urlaub', 'Krankenstand', 'Weiterbildung', 'Arztbesuch', 'Zeitausgleich']
 
@@ -24,13 +25,13 @@ function newBlock(suggestStart) {
     startTime: suggestStart || '07:00',
     endTime: '',
     pauseMinutes: '0',
+    pendingPhotos: [], // Fotos pro Block
   }
 }
 
 export default function Zeiterfassung() {
   const { user, profile } = useAuth()
   const { showToast } = useToast()
-  const photoInputRef = useRef(null)
 
   const [projects, setProjects] = useState([])
   const [zulagen, setZulagen] = useState([])
@@ -49,10 +50,12 @@ export default function Zeiterfassung() {
   // Time blocks
   const [blocks, setBlocks] = useState([newBlock()])
 
-  // Zulagen + Fotos (für ganzen Tag)
+  // Zulagen + Modal-State
   const [selectedZulagen, setSelectedZulagen] = useState({})
   const [showZulagenPicker, setShowZulagenPicker] = useState(false)
-  const [pendingPhotos, setPendingPhotos] = useState([])
+
+  // Project Dialog State (auf Top-Level damit es OUTSIDE der Form rendert)
+  const [newProjectForBlock, setNewProjectForBlock] = useState(null) // block.id oder null
 
   useEffect(() => {
     if (!user) return
@@ -106,7 +109,6 @@ export default function Zeiterfassung() {
     : blocks.reduce((s, b) => s + calcBlockHours(b), 0)
 
   function addBlock() {
-    // Suggest next start time = previous block's end time
     const last = blocks[blocks.length - 1]
     const suggestStart = last?.endTime || '13:00'
     setBlocks(prev => [...prev, newBlock(suggestStart)])
@@ -120,6 +122,18 @@ export default function Zeiterfassung() {
     setBlocks(prev => prev.length === 1 ? prev : prev.filter((_, i) => i !== idx))
   }
 
+  function addPhotoToBlock(blockIdx, files) {
+    setBlocks(prev => prev.map((b, i) =>
+      i === blockIdx ? { ...b, pendingPhotos: [...(b.pendingPhotos || []), ...files] } : b
+    ))
+  }
+
+  function removePhotoFromBlock(blockIdx, photoIdx) {
+    setBlocks(prev => prev.map((b, i) =>
+      i === blockIdx ? { ...b, pendingPhotos: (b.pendingPhotos || []).filter((_, j) => j !== photoIdx) } : b
+    ))
+  }
+
   function toggleZulage(z) {
     setSelectedZulagen(prev => {
       const next = { ...prev }
@@ -129,14 +143,17 @@ export default function Zeiterfassung() {
     })
   }
 
-  function handlePhotoSelect(e) {
-    const files = Array.from(e.target.files || [])
-    setPendingPhotos(prev => [...prev, ...files])
-    e.target.value = ''
-  }
-
-  function removePendingPhoto(idx) {
-    setPendingPhotos(prev => prev.filter((_, i) => i !== idx))
+  function handleProjectCreated(project) {
+    // Projekt zur Liste hinzufügen
+    setProjects(prev => [project, ...prev])
+    // An den richtigen Block zuweisen
+    if (newProjectForBlock !== null) {
+      const blockIdx = blocks.findIndex(b => b.id === newProjectForBlock)
+      if (blockIdx >= 0) {
+        updateBlock(blockIdx, 'projectId', project.id)
+      }
+    }
+    setNewProjectForBlock(null)
   }
 
   async function handleSubmit(e) {
@@ -146,7 +163,6 @@ export default function Zeiterfassung() {
       if (!absenceType) { showToast('Bitte Abwesenheitsart wählen', 'error'); return }
       if (!absenceHours || parseFloat(absenceHours) <= 0) { showToast('Bitte Stunden angeben', 'error'); return }
     } else {
-      // Validate blocks
       const valid = blocks.filter(b => b.startTime && b.endTime && calcBlockHours(b) > 0)
       if (valid.length === 0) { showToast('Bitte mindestens einen Zeitblock mit Von/Bis ausfüllen', 'error'); return }
     }
@@ -163,7 +179,7 @@ export default function Zeiterfassung() {
           isAbsence: true,
           absenceType,
         })
-        createdEntries.push(entry)
+        createdEntries.push({ entry, block: null })
       } else {
         for (const b of blocks) {
           const stunden = calcBlockHours(b)
@@ -179,13 +195,13 @@ export default function Zeiterfassung() {
             pauseMinutes: parseInt(b.pauseMinutes) || 0,
             locationType,
           })
-          createdEntries.push({ ...entry, _block: b })
+          createdEntries.push({ entry, block: b })
         }
       }
 
-      // Zulagen → an ersten Eintrag hängen
+      // Zulagen → an ersten Eintrag
       if (createdEntries.length > 0 && Object.keys(selectedZulagen).length > 0) {
-        const firstId = createdEntries[0].id
+        const firstId = createdEntries[0].entry.id
         for (const [zid, opts] of Object.entries(selectedZulagen)) {
           const z = zulagen.find(x => x.id === zid)
           if (!z) continue
@@ -204,16 +220,14 @@ export default function Zeiterfassung() {
         }
       }
 
-      // Fotos → an Block mit passendem Projekt hängen
-      if (pendingPhotos.length > 0) {
-        for (const file of pendingPhotos) {
-          const target = createdEntries.find(e => e.project_id) || createdEntries[0]
-          if (target) {
-            try {
-              await uploadTimeEntryPhoto(target.id, target.project_id || null, user.id, file)
-            } catch (err) {
-              console.error('Foto-Upload fehlgeschlagen:', err)
-            }
+      // Fotos pro Block hochladen
+      for (const { entry, block } of createdEntries) {
+        if (!block?.pendingPhotos?.length) continue
+        for (const file of block.pendingPhotos) {
+          try {
+            await uploadTimeEntryPhoto(entry.id, entry.project_id || null, user.id, file)
+          } catch (err) {
+            console.error('Foto-Upload fehlgeschlagen:', err)
           }
         }
       }
@@ -225,7 +239,6 @@ export default function Zeiterfassung() {
       setBlocks([newBlock()])
       setSelectedZulagen({})
       setShowZulagenPicker(false)
-      setPendingPhotos([])
       setIsAbsence(false)
       setAbsenceType('')
       await init()
@@ -250,7 +263,6 @@ export default function Zeiterfassung() {
   const monthHours = entries.reduce((s, e) => s + (Number(e.stunden) || 0), 0)
   const monthZulagen = Object.values(entryZulagen).flat().reduce((s, z) => s + (Number(z.betrag) || 0), 0)
 
-  // Group entries by date
   const grouped = entries.reduce((acc, e) => {
     if (!acc[e.datum]) acc[e.datum] = []
     acc[e.datum].push(e)
@@ -321,9 +333,7 @@ export default function Zeiterfassung() {
                 type="button"
                 onClick={() => setIsAbsence(false)}
                 className={`py-2.5 rounded-lg text-[13px] font-semibold transition-all
-                  ${!isAbsence
-                    ? 'bg-secondary text-white'
-                    : 'bg-gray-100 text-gray-500'}`}
+                  ${!isAbsence ? 'bg-secondary text-white' : 'bg-gray-100 text-gray-500'}`}
               >
                 Anwesend
               </button>
@@ -331,9 +341,7 @@ export default function Zeiterfassung() {
                 type="button"
                 onClick={() => setIsAbsence(true)}
                 className={`py-2.5 rounded-lg text-[13px] font-semibold transition-all
-                  ${isAbsence
-                    ? 'bg-amber-500 text-white'
-                    : 'bg-gray-100 text-gray-500'}`}
+                  ${isAbsence ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-500'}`}
               >
                 Abwesend
               </button>
@@ -369,7 +377,6 @@ export default function Zeiterfassung() {
             </div>
           </div>
         ) : (
-          /* === ARBEITSBLÖCKE === */
           <>
             <div className="flex items-center justify-between px-1">
               <p className="text-[12px] font-semibold text-secondary">
@@ -389,9 +396,10 @@ export default function Zeiterfassung() {
                 projects={projects}
                 onUpdate={(field, val) => updateBlock(idx, field, val)}
                 onRemove={() => removeBlock(idx)}
+                onAddPhotos={(files) => addPhotoToBlock(idx, files)}
+                onRemovePhoto={(photoIdx) => removePhotoFromBlock(idx, photoIdx)}
+                onCreateProject={() => setNewProjectForBlock(b.id)}
                 hours={calcBlockHours(b)}
-                onProjectCreated={(p) => setProjects(prev => [p, ...prev])}
-                defaultGewerk={profile?.default_gewerk}
               />
             ))}
 
@@ -468,40 +476,6 @@ export default function Zeiterfassung() {
                 )}
               </div>
             )}
-
-            {/* === FOTOS === */}
-            {blocks.some(b => b.projectId) && (
-              <div className="card">
-                <p className="flex items-center gap-1.5 text-[12px] font-semibold text-secondary mb-2">
-                  <Camera size={14} weight="fill" className="text-blue-500" />
-                  Fotos zur Baustelle
-                </p>
-                <input
-                  ref={photoInputRef}
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  capture="environment"
-                  onChange={handlePhotoSelect}
-                  className="hidden"
-                />
-                <button
-                  type="button"
-                  onClick={() => photoInputRef.current?.click()}
-                  className="btn-secondary w-full"
-                >
-                  <Camera size={14} weight="fill" />
-                  Foto / Datei wählen
-                </button>
-                {pendingPhotos.length > 0 && (
-                  <div className="grid grid-cols-4 gap-1.5 mt-3">
-                    {pendingPhotos.map((file, i) => (
-                      <PendingPhoto key={i} file={file} onRemove={() => removePendingPhoto(i)} />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </>
         )}
 
@@ -554,12 +528,27 @@ export default function Zeiterfassung() {
           </div>
         )}
       </div>
+
+      {/* === PROJECT DIALOG (außerhalb der Form gerendert) === */}
+      {newProjectForBlock !== null && (
+        <ProjectDialog
+          defaultGewerk={profile?.default_gewerk || 'elektro'}
+          onClose={() => setNewProjectForBlock(null)}
+          onCreated={handleProjectCreated}
+        />
+      )}
     </div>
   )
 }
 
-function BlockCard({ idx, block, blockCount, projects, onUpdate, onRemove, hours, onProjectCreated, defaultGewerk }) {
-  const [showNewProject, setShowNewProject] = useState(false)
+function BlockCard({ idx, block, blockCount, projects, onUpdate, onRemove, hours, onAddPhotos, onRemovePhoto, onCreateProject }) {
+  const photoInputRef = useRef(null)
+
+  function handlePhotoSelect(e) {
+    const files = Array.from(e.target.files || [])
+    if (files.length > 0) onAddPhotos(files)
+    e.target.value = ''
+  }
 
   return (
     <div className="card relative">
@@ -591,7 +580,7 @@ function BlockCard({ idx, block, blockCount, projects, onUpdate, onRemove, hours
             projects={projects}
             value={block.projectId}
             onChange={(id) => onUpdate('projectId', id)}
-            onCreateNew={() => setShowNewProject(true)}
+            onCreateNew={onCreateProject}
             placeholder="Projektnummer oder Name suchen (alle Gewerke)..."
           />
         </div>
@@ -609,22 +598,16 @@ function BlockCard({ idx, block, blockCount, projects, onUpdate, onRemove, hours
         <div className="grid grid-cols-3 gap-2">
           <div>
             <label className="label block mb-0.5">Von</label>
-            <input
-              type="time"
-              step="900"
+            <TimePicker15
               value={block.startTime}
-              onChange={e => onUpdate('startTime', e.target.value)}
-              className="input-field"
+              onChange={(v) => onUpdate('startTime', v)}
             />
           </div>
           <div>
             <label className="label block mb-0.5">Bis</label>
-            <input
-              type="time"
-              step="900"
+            <TimePicker15
               value={block.endTime}
-              onChange={e => onUpdate('endTime', e.target.value)}
-              className="input-field"
+              onChange={(v) => onUpdate('endTime', v)}
             />
           </div>
           <div>
@@ -643,19 +626,45 @@ function BlockCard({ idx, block, blockCount, projects, onUpdate, onRemove, hours
             </select>
           </div>
         </div>
-      </div>
 
-      {showNewProject && (
-        <ProjectDialog
-          defaultGewerk={defaultGewerk || 'elektro'}
-          onClose={() => setShowNewProject(false)}
-          onCreated={(p) => {
-            setShowNewProject(false)
-            onProjectCreated(p)
-            onUpdate('projectId', p.id)
-          }}
-        />
-      )}
+        {/* Fotos pro Block - nur wenn Projekt gewählt */}
+        {block.projectId && (
+          <div className="border-t border-gray-100 pt-2 mt-2">
+            <p className="flex items-center gap-1.5 text-[11px] font-semibold text-secondary mb-2">
+              <Camera size={12} weight="fill" className="text-blue-500" />
+              Fotos zu diesem Block
+            </p>
+            <input
+              ref={photoInputRef}
+              type="file"
+              multiple
+              accept="image/*"
+              capture="environment"
+              onChange={handlePhotoSelect}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => photoInputRef.current?.click()}
+              className="btn-secondary w-full text-[12px] py-1.5 min-h-[36px]"
+            >
+              <Camera size={12} weight="fill" />
+              Foto hinzufügen
+            </button>
+            {(block.pendingPhotos || []).length > 0 && (
+              <div className="grid grid-cols-4 gap-1.5 mt-2">
+                {block.pendingPhotos.map((file, i) => (
+                  <PendingPhoto
+                    key={i}
+                    file={file}
+                    onRemove={() => onRemovePhoto(i)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
