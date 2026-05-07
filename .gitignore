@@ -42,3 +42,7 @@ next-env.d.ts
 
 .vercel
 .vercel
+
+# Supabase: Seed/Bootstrap-Files mit echten Secrets bleiben lokal
+supabase/*.local.sql
+supabase/.temp/

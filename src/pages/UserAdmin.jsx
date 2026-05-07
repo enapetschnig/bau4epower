@@ -625,12 +625,21 @@ function InviteDialog({ onClose, onSent }) {
       const data = await res.json()
 
       if (!res.ok) {
-        // Wenn SMS fehlschlägt: Link trotzdem zeigen
+        // Wenn SMS fehlschlägt: Link trotzdem zeigen + Status auf 'pending' lassen
+        await supabase.from('employee_invitations')
+          .update({ sms_error: data.error || 'SMS-Versand fehlgeschlagen' })
+          .eq('id', inv.id)
         const fallbackUrl = `${window.location.origin}/register?code=${code}`
         setLink(fallbackUrl)
         showToast(`SMS-Versand fehlgeschlagen, Link manuell teilen: ${data.error || 'Twilio nicht konfiguriert'}`, 'error')
         return
       }
+
+      // SMS erfolgreich -> Status updaten (RLS lässt das zu, weil der Admin
+      // selbst der invited_by ist)
+      await supabase.from('employee_invitations')
+        .update({ status: 'sent', sms_sent_at: new Date().toISOString(), sms_error: null })
+        .eq('id', inv.id)
 
       setLink(data.registerUrl)
       showToast(`SMS an ${data.to} gesendet`)

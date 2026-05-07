@@ -5,12 +5,11 @@
  *
  * Erwartet im Body: { invitationId, phone, vorname, code }
  *
- * Benötigte Vercel Environment Variables:
- *   TWILIO_ACCOUNT_SID
- *   TWILIO_AUTH_TOKEN
- *   TWILIO_PHONE_NUMBER (oder TWILIO_FROM_NUMBER)
- *   APP_URL (z.B. https://bau4epower.vercel.app)
- *   SUPABASE_SERVICE_ROLE_KEY (zum Aktualisieren der invitation)
+ * Twilio-Credentials werden NICHT aus Vercel-ENV gelesen, sondern aus der
+ * Supabase-Tabelle app_settings (RLS „nur Admin"). Die Function fragt sie
+ * mit dem User-JWT des aufrufenden Admins ab – so kann der Admin in der
+ * App jederzeit Twilio-Account, -Token oder -Nummer wechseln, ohne dass
+ * Vercel-Variablen angefasst und ein Redeploy nötig wäre.
  */
 
 function decodeJwt(token) {
@@ -43,15 +42,33 @@ function getCorsHeaders(origin) {
 }
 
 function normalizePhone(phone) {
-  // Remove non-digits and ensure international format
   let p = String(phone).replace(/[^\d+]/g, '')
-  // Wenn mit 00 → +
   if (p.startsWith('00')) p = '+' + p.slice(2)
-  // Wenn mit 0 (Österreich Standard) → +43
   if (p.startsWith('0') && !p.startsWith('+')) p = '+43' + p.slice(1)
-  // Wenn nichts vorne → +43 dazu
   if (!p.startsWith('+')) p = '+43' + p
   return p
+}
+
+async function loadSettings(supaUrl, anonKey, userToken, keys) {
+  const params = new URLSearchParams()
+  params.set('select', 'key,value')
+  params.set('key', `in.(${keys.join(',')})`)
+
+  const res = await fetch(`${supaUrl}/rest/v1/app_settings?${params}`, {
+    headers: {
+      'apikey': anonKey,
+      'Authorization': `Bearer ${userToken}`,
+      'Accept': 'application/json',
+    },
+  })
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '')
+    throw new Error(`app_settings konnten nicht geladen werden (HTTP ${res.status}): ${txt}`)
+  }
+  const rows = await res.json()
+  const map = {}
+  for (const r of rows) map[r.key] = r.value
+  return map
 }
 
 export default async function handler(req, res) {
@@ -70,7 +87,6 @@ export default async function handler(req, res) {
   Object.entries(cors).forEach(([k, v]) => res.setHeader(k, v))
 
   try {
-    // Auth-Check
     const userToken = req.headers['x-user-token'] || ''
     const jwtData = decodeJwt(userToken)
     if (!jwtData) {
@@ -82,15 +98,32 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'invitationId, phone und code erforderlich' })
     }
 
-    // Twilio-Credentials
-    const accountSid = process.env.TWILIO_ACCOUNT_SID
-    const authToken = process.env.TWILIO_AUTH_TOKEN
-    const fromNumber = process.env.TWILIO_PHONE_NUMBER || process.env.TWILIO_FROM_NUMBER
-    const appUrl = process.env.APP_URL || 'https://bau4epower.vercel.app'
+    const supaUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
+    const anonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+    if (!supaUrl || !anonKey) {
+      return res.status(500).json({
+        error: 'VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY fehlen in der Vercel-Konfiguration.',
+      })
+    }
+
+    let settings
+    try {
+      settings = await loadSettings(
+        supaUrl, anonKey, userToken,
+        ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_PHONE_NUMBER', 'APP_URL'],
+      )
+    } catch (err) {
+      return res.status(500).json({ error: err.message })
+    }
+
+    const accountSid = settings.TWILIO_ACCOUNT_SID
+    const authToken = settings.TWILIO_AUTH_TOKEN
+    const fromNumber = settings.TWILIO_PHONE_NUMBER
+    const appUrl = settings.APP_URL || 'https://bau4epower.vercel.app'
 
     if (!accountSid || !authToken || !fromNumber) {
       return res.status(500).json({
-        error: 'Twilio nicht konfiguriert. Bitte TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN und TWILIO_PHONE_NUMBER in Vercel setzen.',
+        error: 'Twilio-Credentials fehlen in app_settings (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER).',
       })
     }
 
@@ -99,7 +132,6 @@ export default async function handler(req, res) {
     const greeting = vorname ? `Hallo ${vorname}!` : 'Hallo!'
     const smsText = `${greeting} Das ist unsere neue ET-König-App. Bitte registriere dich hier: ${registerUrl}`
 
-    // Twilio API Call
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`
     const auth = Buffer.from(`${accountSid}:${authToken}`).toString('base64')
     const formBody = new URLSearchParams({
@@ -118,26 +150,6 @@ export default async function handler(req, res) {
     })
 
     const twilioData = await twilioRes.json()
-
-    // Invitation-Status updaten via Supabase REST API mit Service Role
-    const supaUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (supaUrl && serviceKey) {
-      const updatePayload = twilioRes.ok
-        ? { status: 'sent', sms_sent_at: new Date().toISOString(), sms_error: null }
-        : { status: 'pending', sms_error: twilioData.message || 'SMS-Versand fehlgeschlagen' }
-
-      await fetch(`${supaUrl}/rest/v1/employee_invitations?id=eq.${invitationId}`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${serviceKey}`,
-          'apikey': serviceKey,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal',
-        },
-        body: JSON.stringify(updatePayload),
-      }).catch(() => {})
-    }
 
     if (!twilioRes.ok) {
       return res.status(twilioRes.status).json({
