@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, X, SpinnerGap, UserCircle, Trash, PencilSimple, FolderOpen, Lightning, SunHorizon, Wrench } from '@phosphor-icons/react'
+import { X, SpinnerGap, UserCircle, Trash, PencilSimple, FolderOpen, Lightning, SunHorizon, Wrench, ShieldCheck, Info } from '@phosphor-icons/react'
 import { useToast } from '../contexts/ToastContext.jsx'
-import { loadEmployees, createEmployee, updateEmployee, deleteEmployee } from '../lib/employees.js'
-import { GEWERKE, gewerkKurz } from '../lib/projectRecords.js'
+import { loadEmployees, updateEmployee, deleteEmployee } from '../lib/employees.js'
+import { GEWERKE } from '../lib/projectRecords.js'
 
 const GEWERK_ICONS = {
   elektro: { Icon: Lightning, color: 'text-amber-600', bg: 'bg-amber-100' },
@@ -16,7 +16,6 @@ export default function Mitarbeiter() {
   const [employees, setEmployees] = useState([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null)
-  const [showNew, setShowNew] = useState(false)
 
   useEffect(() => {
     refresh()
@@ -49,10 +48,20 @@ export default function Mitarbeiter() {
     <div className="max-w-6xl mx-auto px-4 py-3">
       <div className="flex items-center justify-between mb-3">
         <h1 className="text-lg font-bold text-secondary">Mitarbeiter</h1>
-        <button onClick={() => setShowNew(true)} className="btn-primary px-3">
-          <Plus size={14} weight="bold" />
-          Neu
-        </button>
+        <Link to="/benutzer" className="btn-primary px-3">
+          <ShieldCheck size={14} weight="bold" />
+          Einladen
+        </Link>
+      </div>
+
+      <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-3 flex items-start gap-2">
+        <Info size={14} className="text-blue-600 mt-0.5 flex-shrink-0" />
+        <div className="text-[11px] text-blue-900 leading-relaxed">
+          Neue Mitarbeiter werden nicht hier angelegt, sondern <strong>per SMS-Einladung</strong> in der
+          {' '}<Link to="/benutzer" className="underline font-semibold">Benutzer-Verwaltung</Link>.
+          Mitarbeiter registrieren sich selbst über den Einladungslink, du schaltest sie dann frei.
+          <br/>Hier in dieser Liste pflegst du nur die <strong>Stammdaten</strong> (Stundenlohn, IBAN, SV-Nummer, Dokumente).
+        </div>
       </div>
 
       {loading ? (
@@ -62,7 +71,10 @@ export default function Mitarbeiter() {
       ) : employees.length === 0 ? (
         <div className="text-center py-12 text-[13px] text-gray-400">
           <UserCircle size={36} className="mx-auto mb-2 text-gray-200" />
-          Noch keine Mitarbeiter erfasst
+          Noch keine Mitarbeiter registriert
+          <p className="text-[11px] mt-2">
+            Lade neue Mitarbeiter über die <Link to="/benutzer" className="text-primary underline">Benutzer-Verwaltung</Link> ein.
+          </p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -102,11 +114,11 @@ export default function Mitarbeiter() {
         </div>
       )}
 
-      {(showNew || editing) && (
+      {editing && (
         <EmployeeDialog
           employee={editing}
-          onClose={() => { setShowNew(false); setEditing(null) }}
-          onSaved={() => { setShowNew(false); setEditing(null); refresh() }}
+          onClose={() => setEditing(null)}
+          onSaved={() => { setEditing(null); refresh() }}
         />
       )}
     </div>
@@ -142,12 +154,8 @@ function EmployeeDialog({ employee, onClose, onSaved }) {
         stundenlohn: form.stundenlohn ? parseFloat(form.stundenlohn) : null,
         eintritt_datum: form.eintritt_datum || null,
       }
-      if (employee) {
-        await updateEmployee(employee.id, payload)
-      } else {
-        await createEmployee(payload)
-      }
-      showToast(employee ? 'Aktualisiert' : 'Mitarbeiter angelegt')
+      await updateEmployee(employee.id, payload)
+      showToast('Aktualisiert')
       onSaved()
     } catch (err) {
       showToast(err.message || 'Fehler', 'error')
@@ -161,7 +169,7 @@ function EmployeeDialog({ employee, onClose, onSaved }) {
       <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-xl p-4 max-h-[90vh] overflow-auto">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-bold text-secondary">
-            {employee ? 'Mitarbeiter bearbeiten' : 'Neuer Mitarbeiter'}
+            Mitarbeiter bearbeiten
           </h2>
           <button onClick={onClose} className="touch-btn text-gray-400">
             <X size={18} />

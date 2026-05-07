@@ -88,3 +88,26 @@ export function calcFoerderung(foerderung, ctx) {
   }
   return Math.round(betrag * 100) / 100
 }
+
+/**
+ * Erkennt Konflikte zwischen ausgewählten Förderungen.
+ * Eine Konflikt-Beziehung besteht, wenn A in B.excludes steht ODER B in A.excludes steht.
+ *
+ * @param {Array<{id:string, name:string, excludes?:string[]}>} selected
+ * @returns {Array<{a: object, b: object}>} Liste der Konfliktpaare (eindeutig)
+ */
+export function detectFoerderungConflicts(selected) {
+  const conflicts = []
+  for (let i = 0; i < selected.length; i++) {
+    for (let j = i + 1; j < selected.length; j++) {
+      const a = selected[i]
+      const b = selected[j]
+      const exA = Array.isArray(a.excludes) ? a.excludes : []
+      const exB = Array.isArray(b.excludes) ? b.excludes : []
+      if (exA.includes(b.id) || exB.includes(a.id)) {
+        conflicts.push({ a, b })
+      }
+    }
+  }
+  return conflicts
+}

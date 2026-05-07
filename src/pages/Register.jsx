@@ -4,6 +4,7 @@ import { SpinnerGap, EnvelopeSimple, Lock, Phone, User, CheckCircle, Warning, Li
 import { supabase } from '../lib/supabase.js'
 import Logo from '../components/Logo.jsx'
 import { GEWERKE } from '../lib/projectRecords.js'
+import { normalizePhone } from '../lib/phone.js'
 
 const GEWERK_ICONS = {
   elektro: { Icon: Lightning, color: 'text-amber-600', bg: 'bg-amber-100' },
@@ -92,6 +93,20 @@ export default function Register() {
 
     setSubmitting(true)
     try {
+      const normalizedPhone = normalizePhone(form.phone)
+
+      // Telefonnummer-Eindeutigkeit vorab prüfen, sodass der User eine
+      // saubere Fehlermeldung sieht, statt einer kryptischen DB-Constraint-
+      // Verletzung beim Trigger nach dem Auth-Signup.
+      if (normalizedPhone) {
+        const { data: phoneTaken } = await supabase.rpc('phone_already_registered', { p: normalizedPhone })
+        if (phoneTaken === true) {
+          setError('Diese Telefonnummer ist bereits registriert. Pro Person ist nur eine Registrierung möglich.')
+          setSubmitting(false)
+          return
+        }
+      }
+
       const { error: signupError } = await supabase.auth.signUp({
         email: form.email.trim().toLowerCase(),
         password: form.password,
@@ -99,7 +114,7 @@ export default function Register() {
           data: {
             vorname: form.vorname.trim(),
             nachname: form.nachname.trim(),
-            phone: form.phone.trim(),
+            phone: normalizedPhone,
             default_gewerk: form.gewerk,
             invite_code: code || null,
           },
@@ -109,6 +124,11 @@ export default function Register() {
       if (signupError) {
         if (signupError.message.includes('already')) {
           setError('Diese E-Mail-Adresse ist bereits registriert')
+        } else if (
+          signupError.message.includes('phone') ||
+          signupError.message.includes('profiles_phone_unique')
+        ) {
+          setError('Diese Telefonnummer ist bereits registriert.')
         } else {
           setError(signupError.message)
         }

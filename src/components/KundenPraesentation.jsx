@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
 import {
   X, SunHorizon, BatteryFull, Plug, Thermometer, CurrencyEur, ArrowDown,
   CheckCircle, Leaf, Lightning, House, ChartLineUp, Info, Calendar, Sparkle,
-  Wallet, TrendUp, ShieldCheck, ArrowSquareOut, Clock,
+  Wallet, TrendUp, ShieldCheck, ArrowSquareOut, Clock, Warning,
 } from '@phosphor-icons/react'
 import Logo from './Logo.jsx'
+import { detectFoerderungConflicts } from '../lib/foerderungen.js'
+import PdfEmailSender from './PdfEmailSender.jsx'
 
 /**
  * Kunden-Präsentation: Vollbild-Verkaufspräsentation für Vorführung beim Kunden.
@@ -13,6 +14,7 @@ import Logo from './Logo.jsx'
 export default function KundenPraesentation({
   kunde, kwp, speicherKwh, hatWallbox, hatHeizstab,
   gruppen, totals, foerderungen = [], foerderungSumme = 0, endpreis, onClose,
+  generatePdfBlob,
 }) {
   const fullName = kunde.firma || `${kunde.vorname || ''} ${kunde.nachname || ''}`.trim() || 'Kunde'
 
@@ -38,6 +40,9 @@ export default function KundenPraesentation({
     : null
 
   const ersparnisProzent = totals.brutto > 0 ? Math.round((foerderungSumme / totals.brutto) * 100) : 0
+
+  const conflicts = detectFoerderungConflicts(foerderungen)
+  const adresseFull = [kunde.strasse, [kunde.plz, kunde.ort].filter(Boolean).join(' ')].filter(Boolean).join(', ')
 
   return (
     <div className="fixed inset-0 z-50 bg-gradient-to-br from-orange-50 via-white to-amber-50 overflow-auto">
@@ -226,6 +231,28 @@ export default function KundenPraesentation({
               Folgende Förderungen sind für Ihre Anlage anwendbar. Wir unterstützen Sie bei der Antragsstellung.
             </p>
 
+            {conflicts.length > 0 && (
+              <div className="bg-rose-50 border-2 border-rose-200 rounded-xl p-4 mb-5 flex items-start gap-3">
+                <Warning size={18} weight="fill" className="text-rose-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-[13px] font-bold text-rose-900">Achtung: Förderungen schließen sich gegenseitig aus</p>
+                  <ul className="mt-2 space-y-1">
+                    {conflicts.map((c, i) => (
+                      <li key={i} className="text-[12px] text-rose-800">
+                        <strong>{c.a.name}</strong>
+                        <span className="text-rose-500 mx-1.5">↔</span>
+                        <strong>{c.b.name}</strong>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="text-[11px] text-rose-700 mt-2 leading-relaxed">
+                    Diese Förderungen können laut aktueller Förderbedingungen nicht
+                    gleichzeitig in Anspruch genommen werden. Bitte bei der Antragsstellung beachten.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-3 mb-10">
               {foerderungen.map((f, i) => (
                 <FoerderungCard key={f.id} foerderung={f} index={i + 1} />
@@ -331,6 +358,35 @@ export default function KundenPraesentation({
           </div>
         </div>
 
+        {/* ─── PDF-VERSAND ─────────── */}
+        {generatePdfBlob && (
+          <div className="bg-white rounded-2xl border-2 border-orange-200 p-5 mb-8"
+            style={{ boxShadow: '0 4px 12px rgba(246,135,20,0.08)' }}>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-amber-500 rounded-lg flex items-center justify-center">
+                <SunHorizon size={16} weight="fill" className="text-white" />
+              </div>
+              <div>
+                <p className="text-[13px] font-bold text-secondary">Angebot direkt versenden</p>
+                <p className="text-[10px] text-gray-500">Vorschau ansehen oder als PDF an Kunden mailen</p>
+              </div>
+            </div>
+            <PdfEmailSender
+              generatePdf={generatePdfBlob}
+              betrifft={`PV-Anlage ${kwp.toFixed(2).replace('.', ',')} kWp`}
+              adresse={adresseFull}
+              projektnummer={kunde.beleg_nr || ''}
+              pdfFilename={`Angebot_${(kunde.beleg_nr || 'PV').replace(/[^A-Za-z0-9_-]/g, '_')}.pdf`}
+              type="angebot"
+            />
+            {kunde.email && (
+              <p className="text-[10px] text-gray-400 mt-2">
+                Kundenadresse aus Kontaktdaten: <strong>{kunde.email}</strong>
+              </p>
+            )}
+          </div>
+        )}
+
         {/* ─── FOOTER ─────────── */}
         <div className="text-center pt-4 pb-8 border-t border-gray-100">
           <p className="text-[12px] text-gray-500 mb-2">
@@ -412,8 +468,18 @@ function VorteilCard({ Icon, title, desc }) {
 }
 
 function FoerderungCard({ foerderung, index }) {
-  const [expanded, setExpanded] = useState(false)
   const f = foerderung
+
+  // Budget-Status ist bewusst auffällig (Käufer wissen, ob noch was geht)
+  const budgetCfg = {
+    ausreichend: { label: 'Budget ausreichend', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+    knapp: { label: 'Budget knapp – schnell sein!', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+    ausgeschoepft: { label: 'Budget aktuell ausgeschöpft', bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
+  }[f.budget_status]
+
+  const callDate = f.naechster_call_datum
+    ? new Date(f.naechster_call_datum).toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    : null
 
   return (
     <div className="bg-white rounded-2xl border-2 border-emerald-100 overflow-hidden"
@@ -427,6 +493,28 @@ function FoerderungCard({ foerderung, index }) {
             <p className="text-[14px] font-bold text-secondary leading-tight">{f.name}</p>
             {f.beschreibung && (
               <p className="text-[11px] text-gray-500 mt-0.5">{f.beschreibung}</p>
+            )}
+            {(budgetCfg || callDate || f.deadline_aktuell) && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {budgetCfg && (
+                  <span className={`inline-flex items-center gap-1 ${budgetCfg.bg} ${budgetCfg.text} ${budgetCfg.border}
+                    border rounded-full px-2 py-0.5 text-[10px] font-semibold`}>
+                    {budgetCfg.label}
+                  </span>
+                )}
+                {callDate && (
+                  <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 border border-blue-200
+                    rounded-full px-2 py-0.5 text-[10px] font-semibold">
+                    <Calendar size={10} weight="fill" /> Nächster Call: {callDate}
+                  </span>
+                )}
+                {f.deadline_aktuell && (
+                  <span className="inline-flex items-center gap-1 bg-orange-50 text-orange-700 border border-orange-200
+                    rounded-full px-2 py-0.5 text-[10px] font-semibold">
+                    <Clock size={10} weight="fill" /> {f.deadline_aktuell}
+                  </span>
+                )}
+              </div>
             )}
           </div>
           <div className="text-right flex-shrink-0">
@@ -450,6 +538,28 @@ function FoerderungCard({ foerderung, index }) {
           />
         )}
 
+        {/* Voraussetzungen */}
+        {f.voraussetzungen && (
+          <TipBlock
+            Icon={CheckCircle}
+            iconColor="text-emerald-600"
+            bgColor="bg-emerald-50"
+            title="Voraussetzungen"
+            text={f.voraussetzungen}
+          />
+        )}
+
+        {/* Antragsablauf */}
+        {f.antragsablauf && (
+          <TipBlock
+            Icon={ChartLineUp}
+            iconColor="text-indigo-500"
+            bgColor="bg-indigo-50"
+            title="So läuft der Antrag ab"
+            text={f.antragsablauf}
+          />
+        )}
+
         {/* Call-Zeitraum */}
         {f.call_zeitraum && (
           <TipBlock
@@ -458,6 +568,17 @@ function FoerderungCard({ foerderung, index }) {
             bgColor="bg-amber-50"
             title="Wann ist der Förder-Call?"
             text={f.call_zeitraum}
+          />
+        )}
+
+        {/* Bearbeitungsdauer + Auszahlungsmodus (zusammen) */}
+        {(f.bearbeitungsdauer || f.auszahlungsmodus) && (
+          <TipBlock
+            Icon={Clock}
+            iconColor="text-cyan-600"
+            bgColor="bg-cyan-50"
+            title="Bearbeitung & Auszahlung"
+            text={[f.bearbeitungsdauer, f.auszahlungsmodus].filter(Boolean).join(' · ')}
           />
         )}
 

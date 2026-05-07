@@ -1,9 +1,10 @@
 import { X, CurrencyEur } from '@phosphor-icons/react'
+import PdfEmailSender from './PdfEmailSender.jsx'
 
 export default function PvAngebotVorschau({
   kunde, datum, gruppen, totals,
   foerderungen = [], foerderungSumme = 0, endpreis = null,
-  onClose,
+  onClose, generatePdfBlob,
 }) {
   const fmt = (val) => Number(val || 0).toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   const fmtMenge = (val) => Number(val || 0).toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -204,7 +205,17 @@ export default function PvAngebotVorschau({
         </div>
 
         {/* Action Bar */}
-        <div className="bg-white border-t border-gray-100 px-4 py-3 flex-shrink-0">
+        <div className="bg-white border-t border-gray-100 px-4 py-3 flex-shrink-0 space-y-2">
+          {generatePdfBlob && (
+            <PdfEmailSender
+              generatePdf={generatePdfBlob}
+              betrifft="PV-Angebot"
+              adresse={[kunde.strasse, [kunde.plz, kunde.ort].filter(Boolean).join(' ')].filter(Boolean).join(', ')}
+              projektnummer={kunde.beleg_nr || ''}
+              pdfFilename={`Angebot_${(kunde.beleg_nr || 'PV').replace(/[^A-Za-z0-9_-]/g, '_')}.pdf`}
+              type="angebot"
+            />
+          )}
           <button onClick={onClose} className="btn-secondary w-full">
             Schließen & Anpassen
           </button>

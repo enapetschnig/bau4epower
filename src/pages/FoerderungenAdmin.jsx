@@ -180,9 +180,34 @@ function FoerderungDialog({ foerderung, onClose, onSaved }) {
     call_zeitraum: foerderung?.call_zeitraum || '',
     antragstelle: foerderung?.antragstelle || '',
     link: foerderung?.link || '',
+    voraussetzungen: foerderung?.voraussetzungen || '',
+    antragsablauf: foerderung?.antragsablauf || '',
+    deadline_aktuell: foerderung?.deadline_aktuell || '',
+    naechster_call_datum: foerderung?.naechster_call_datum || '',
+    budget_status: foerderung?.budget_status || '',
+    bearbeitungsdauer: foerderung?.bearbeitungsdauer || '',
+    auszahlungsmodus: foerderung?.auszahlungsmodus || '',
+    excludes: foerderung?.excludes || [],
     is_active: foerderung?.is_active ?? true,
   })
+  const [allFoerderungen, setAllFoerderungen] = useState([])
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    // Andere Förderungen laden für die Ausschluss-Auswahl
+    loadAllFoerderungen()
+      .then(list => setAllFoerderungen(list.filter(f => f.id !== foerderung?.id)))
+      .catch(() => setAllFoerderungen([]))
+  }, [foerderung?.id])
+
+  function toggleExclude(id) {
+    setForm(prev => ({
+      ...prev,
+      excludes: prev.excludes.includes(id)
+        ? prev.excludes.filter(x => x !== id)
+        : [...prev.excludes, id],
+    }))
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -195,6 +220,8 @@ function FoerderungDialog({ foerderung, onClose, onSaved }) {
         max_betrag: form.max_betrag ? parseFloat(form.max_betrag) : null,
         min_anlage_kwp: form.min_anlage_kwp ? parseFloat(form.min_anlage_kwp) : null,
         max_anlage_kwp: form.max_anlage_kwp ? parseFloat(form.max_anlage_kwp) : null,
+        naechster_call_datum: form.naechster_call_datum || null,
+        excludes: form.excludes || [],
       }
       if (foerderung) {
         await updateFoerderung(foerderung.id, payload)
@@ -329,7 +356,98 @@ function FoerderungDialog({ foerderung, onClose, onSaved }) {
                 placeholder="https://..." />
             </div>
           </div>
-          <label className="flex items-center gap-2 cursor-pointer pt-2">
+          <div className="border-t border-gray-100 pt-2 mt-2">
+            <p className="text-[11px] text-gray-500 mb-2 font-semibold">Aktuelle Termine & Status</p>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="label block mb-0.5">Nächster Call</label>
+                <input type="date" value={form.naechster_call_datum}
+                  onChange={e => setForm({ ...form, naechster_call_datum: e.target.value })}
+                  className="input-field" />
+              </div>
+              <div>
+                <label className="label block mb-0.5">Budget-Status</label>
+                <select value={form.budget_status}
+                  onChange={e => setForm({ ...form, budget_status: e.target.value })}
+                  className="input-field">
+                  <option value="">– unbekannt –</option>
+                  <option value="ausreichend">Ausreichend</option>
+                  <option value="knapp">Knapp</option>
+                  <option value="ausgeschoepft">Ausgeschöpft</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-2">
+              <label className="label block mb-0.5">Aktuelle Deadline (Freitext)</label>
+              <input value={form.deadline_aktuell}
+                onChange={e => setForm({ ...form, deadline_aktuell: e.target.value })}
+                className="input-field"
+                placeholder="z.B. 'Call läuft bis 31.05.2026, 12:00 Uhr'" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <div>
+                <label className="label block mb-0.5">Bearbeitungsdauer</label>
+                <input value={form.bearbeitungsdauer}
+                  onChange={e => setForm({ ...form, bearbeitungsdauer: e.target.value })}
+                  className="input-field"
+                  placeholder="z.B. 8-12 Wochen" />
+              </div>
+              <div>
+                <label className="label block mb-0.5">Auszahlungsmodus</label>
+                <input value={form.auszahlungsmodus}
+                  onChange={e => setForm({ ...form, auszahlungsmodus: e.target.value })}
+                  className="input-field"
+                  placeholder="z.B. Nach Inbetriebnahme" />
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-100 pt-2 mt-2">
+            <p className="text-[11px] text-gray-500 mb-2 font-semibold">Voraussetzungen & Antragsablauf</p>
+
+            <div>
+              <label className="label block mb-0.5">Voraussetzungen (Wer ist berechtigt?)</label>
+              <textarea value={form.voraussetzungen}
+                onChange={e => setForm({ ...form, voraussetzungen: e.target.value })}
+                className="input-field min-h-[60px]"
+                placeholder="z.B. Hauptwohnsitz in Steiermark, Antrag VOR Auftragserteilung, etc." />
+            </div>
+
+            <div className="mt-2">
+              <label className="label block mb-0.5">Antragsablauf (Wie geht's Schritt für Schritt?)</label>
+              <textarea value={form.antragsablauf}
+                onChange={e => setForm({ ...form, antragsablauf: e.target.value })}
+                className="input-field min-h-[80px]"
+                placeholder="1. Online-Registrierung\n2. Antrag mit Daten der geplanten Anlage\n3. Förderzusage abwarten\n4. ..." />
+            </div>
+          </div>
+
+          {allFoerderungen.length > 0 && (
+            <div className="border-t border-gray-100 pt-2 mt-2">
+              <p className="text-[11px] text-gray-500 mb-2 font-semibold">
+                Schließt diese Förderungen aus
+                <span className="text-gray-400 font-normal">  (kombinierbar wenn nichts gewählt)</span>
+              </p>
+              <div className="space-y-1 max-h-40 overflow-y-auto">
+                {allFoerderungen.map(other => (
+                  <label key={other.id}
+                    className={`flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer text-[11px]
+                      ${form.excludes.includes(other.id) ? 'bg-rose-50 text-rose-700' : 'bg-gray-50 text-gray-600'}`}>
+                    <input type="checkbox"
+                      checked={form.excludes.includes(other.id)}
+                      onChange={() => toggleExclude(other.id)}
+                      className="w-3.5 h-3.5 accent-rose-500" />
+                    <span className="truncate">{other.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <label className="flex items-center gap-2 cursor-pointer pt-2 border-t border-gray-100">
             <input type="checkbox" checked={form.is_active}
               onChange={e => setForm({ ...form, is_active: e.target.checked })}
               className="w-4 h-4 accent-primary" />

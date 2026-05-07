@@ -97,7 +97,7 @@ export default async function handler(req, res) {
     const toPhone = normalizePhone(phone)
     const registerUrl = `${appUrl}/register?code=${code}`
     const greeting = vorname ? `Hallo ${vorname}!` : 'Hallo!'
-    const smsText = `${greeting} Du wurdest zur ET KÖNIG App eingeladen. Aktiviere deinen Account: ${registerUrl}`
+    const smsText = `${greeting} Das ist unsere neue ET-König-App. Bitte registriere dich hier: ${registerUrl}`
 
     // Twilio API Call
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`

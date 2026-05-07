@@ -6,7 +6,7 @@ import { useToast } from '../contexts/ToastContext.jsx'
 import { loadPvProducts, calcMontagePreis, calcInstallationPreis } from '../lib/pvProducts.js'
 import { createPvOffer, updatePvOffer, loadPvOffer, calculateTotals } from '../lib/pvOffers.js'
 import { generatePvAngebotPdf } from '../lib/pvPdfGenerator.js'
-import { loadFoerderungen, calcFoerderung } from '../lib/foerderungen.js'
+import { loadFoerderungen, calcFoerderung, detectFoerderungConflicts } from '../lib/foerderungen.js'
 import PvAngebotVorschau from '../components/PvAngebotVorschau.jsx'
 import KundenPraesentation from '../components/KundenPraesentation.jsx'
 
@@ -291,6 +291,21 @@ export default function PvAngebotNeu() {
 
   const foerderungSumme = aktiveFoerderungen.reduce((s, f) => s + (Number(f._berechnet) || 0), 0)
   const endpreis = Math.max(0, totals.brutto - foerderungSumme)
+  const foerderungConflicts = detectFoerderungConflicts(aktiveFoerderungen)
+
+  // PDF aus aktuellem In-Memory-Zustand erzeugen (Standard-Angebot OHNE Förderungen)
+  async function generateOfferPdfBlob() {
+    const offerObj = {
+      ...kunde,
+      datum,
+      beleg_nr: kunde.beleg_nr || 'ENTWURF',
+      positionen: gruppen,
+      netto: totals.netto,
+      mwst: totals.mwst,
+      brutto: totals.brutto,
+    }
+    return await generatePvAngebotPdf(offerObj)
+  }
 
   function toggleFoerderung(f) {
     setSelectedFoerderungen(prev => {
@@ -576,6 +591,21 @@ export default function PvAngebotNeu() {
           <p className="text-[11px] text-gray-400 -mt-1 mb-1">
             Wähle anwendbare Förderungen. Beträge werden anhand Anlage berechnet, du kannst sie aber pro Position überschreiben.
           </p>
+          {foerderungConflicts.length > 0 && (
+            <div className="bg-rose-50 border border-rose-200 rounded-lg p-2.5 mb-2">
+              <p className="text-[11px] font-bold text-rose-800 mb-1">⚠ Konflikt: Förderungen schließen sich aus</p>
+              <ul className="text-[10px] text-rose-700 space-y-0.5">
+                {foerderungConflicts.map((c, i) => (
+                  <li key={i}>
+                    <strong>{c.a.name}</strong> ↔ <strong>{c.b.name}</strong>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-[10px] text-rose-600 mt-1 italic">
+                Bitte nur eine der konfligierenden Förderungen aktiv lassen.
+              </p>
+            </div>
+          )}
           <div className="space-y-1.5">
             {foerderungen.map(f => {
               const sel = selectedFoerderungen[f.id]
@@ -720,6 +750,7 @@ export default function PvAngebotNeu() {
           foerderungSumme={foerderungSumme}
           endpreis={endpreis}
           onClose={() => setShowPreview(false)}
+          generatePdfBlob={generateOfferPdfBlob}
         />
       )}
 
@@ -736,6 +767,7 @@ export default function PvAngebotNeu() {
           foerderungSumme={foerderungSumme}
           endpreis={endpreis}
           onClose={() => setShowPresentation(false)}
+          generatePdfBlob={generateOfferPdfBlob}
         />
       )}
     </div>
