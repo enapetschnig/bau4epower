@@ -6,7 +6,7 @@ import { useToast } from '../contexts/ToastContext.jsx'
 import { loadPvProducts, calcMontagePreis, calcInstallationPreis } from '../lib/pvProducts.js'
 import { createPvOffer, updatePvOffer, loadPvOffer, calculateTotals } from '../lib/pvOffers.js'
 import { generatePvAngebotPdf } from '../lib/pvPdfGenerator.js'
-import { loadFoerderungen, calcFoerderung, detectFoerderungConflicts } from '../lib/foerderungen.js'
+import { loadFoerderungen, calcFoerderung, calcExplained, eligibilityCheck, detectFoerderungConflicts } from '../lib/foerderungen.js'
 import PvAngebotVorschau from '../components/PvAngebotVorschau.jsx'
 import KundenPraesentation from '../components/KundenPraesentation.jsx'
 
@@ -606,57 +606,17 @@ export default function PvAngebotNeu() {
               </p>
             </div>
           )}
-          <div className="space-y-1.5">
-            {foerderungen.map(f => {
-              const sel = selectedFoerderungen[f.id]
-              const auto = calcFoerderung(f, foerderungsContext)
-              const eligible = auto > 0
-              const aktiv = !!sel?.aktiv
-              const customVal = sel?.custom
-              const angezeigt = aktiv ? (customVal !== undefined && customVal !== '' ? Number(customVal) : auto) : 0
-
-              return (
-                <div key={f.id} className={`rounded-lg border p-2 transition-all
-                  ${aktiv ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-gray-100'}`}>
-                  <div className="flex items-start gap-2">
-                    <button
-                      type="button"
-                      onClick={() => toggleFoerderung(f)}
-                      disabled={!eligible && !aktiv}
-                      className={`w-5 h-5 mt-0.5 rounded flex items-center justify-center flex-shrink-0 transition-colors
-                        ${aktiv ? 'bg-emerald-500 text-white' : eligible ? 'bg-gray-100 text-gray-300' : 'bg-gray-50 text-gray-200'}`}
-                    >
-                      {aktiv && <span className="text-[12px]">✓</span>}
-                    </button>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-[12px] font-medium truncate ${eligible ? 'text-secondary' : 'text-gray-400'}`}>
-                        {f.name}
-                      </p>
-                      {f.beschreibung && (
-                        <p className="text-[10px] text-gray-400 truncate">{f.beschreibung}</p>
-                      )}
-                      {!eligible && !aktiv && (
-                        <p className="text-[10px] text-amber-500 italic">Nicht anwendbar (Anlage/Komponente fehlt)</p>
-                      )}
-                    </div>
-                    {aktiv && (
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={customVal !== undefined ? customVal : auto.toFixed(2)}
-                        onChange={e => setFoerderungCustom(f.id, e.target.value)}
-                        className="w-20 text-right rounded border border-emerald-200 px-1.5 py-1 text-[12px] font-semibold text-emerald-700 bg-white"
-                      />
-                    )}
-                    {!aktiv && eligible && (
-                      <span className="text-[11px] text-gray-400 whitespace-nowrap">
-                        ~{auto.toLocaleString('de-AT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} €
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
+          <div className="space-y-2">
+            {foerderungen.map(f => (
+              <FoerderungEditCard
+                key={f.id}
+                foerderung={f}
+                ctx={foerderungsContext}
+                selection={selectedFoerderungen[f.id]}
+                onToggle={() => toggleFoerderung(f)}
+                onCustomChange={val => setFoerderungCustom(f.id, val)}
+              />
+            ))}
           </div>
         </Section>
       )}
@@ -770,6 +730,162 @@ export default function PvAngebotNeu() {
           generatePdfBlob={generateOfferPdfBlob}
         />
       )}
+    </div>
+  )
+}
+
+function FoerderungEditCard({ foerderung, ctx, selection, onToggle, onCustomChange }) {
+  const [showDetails, setShowDetails] = useState(false)
+  const f = foerderung
+  const aktiv = !!selection?.aktiv
+  const customVal = selection?.custom
+
+  const { eligible, reasons, blockers } = eligibilityCheck(f, ctx)
+  const { betrag, formula } = calcExplained(f, ctx)
+  const angezeigt = aktiv ? (customVal !== undefined && customVal !== '' ? Number(customVal) : betrag) : 0
+
+  const callDate = f.naechster_call_datum
+    ? new Date(f.naechster_call_datum).toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit' })
+    : null
+  const budgetCfg = {
+    ausreichend:   { label: 'Budget ok',          color: 'bg-emerald-100 text-emerald-700' },
+    knapp:         { label: 'Budget knapp',       color: 'bg-amber-100 text-amber-700' },
+    ausgeschoepft: { label: 'Budget ausgeschöpft',color: 'bg-rose-100 text-rose-700' },
+  }[f.budget_status]
+
+  return (
+    <div className={`rounded-lg border p-2.5 transition-all
+      ${aktiv ? 'bg-emerald-50 border-emerald-300' :
+        eligible ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100 opacity-70'}`}>
+
+      {/* Kopfzeile: Toggle + Name + Betrag */}
+      <div className="flex items-start gap-2.5">
+        <button
+          type="button"
+          onClick={onToggle}
+          disabled={!eligible && !aktiv}
+          className={`w-5 h-5 mt-0.5 rounded flex items-center justify-center flex-shrink-0 transition-colors
+            ${aktiv ? 'bg-emerald-500 text-white' : eligible ? 'bg-white border-2 border-gray-300' : 'bg-gray-100 border border-gray-200'}`}
+        >
+          {aktiv && <span className="text-[12px]">✓</span>}
+        </button>
+
+        <div className="flex-1 min-w-0">
+          <p className={`text-[13px] font-semibold leading-tight ${eligible ? 'text-secondary' : 'text-gray-400'}`}>
+            {f.name}
+          </p>
+          {f.beschreibung && (
+            <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">{f.beschreibung}</p>
+          )}
+        </div>
+
+        <div className="flex-shrink-0 text-right">
+          {aktiv ? (
+            <input
+              type="number" step="0.01"
+              value={customVal !== undefined ? customVal : betrag.toFixed(2)}
+              onChange={e => onCustomChange(e.target.value)}
+              className="w-24 text-right rounded border border-emerald-300 px-1.5 py-1 text-[13px] font-bold text-emerald-700 bg-white"
+            />
+          ) : eligible ? (
+            <span className="text-[13px] font-bold text-emerald-600">
+              {betrag.toLocaleString('de-AT', { maximumFractionDigits: 0 })} €
+            </span>
+          ) : (
+            <span className="text-[11px] text-gray-300">–</span>
+          )}
+        </div>
+      </div>
+
+      {/* Eligibility-Begründung */}
+      {(reasons.length > 0 || blockers.length > 0) && (
+        <div className="mt-2 ml-7 space-y-0.5">
+          {reasons.map((r, i) => (
+            <p key={`r${i}`} className="text-[11px] text-emerald-700 flex items-start gap-1">
+              <span className="text-emerald-500 flex-shrink-0">✓</span>
+              <span>{r}</span>
+            </p>
+          ))}
+          {blockers.map((b, i) => (
+            <p key={`b${i}`} className="text-[11px] text-rose-600 flex items-start gap-1">
+              <span className="text-rose-500 flex-shrink-0">✗</span>
+              <span>{b}</span>
+            </p>
+          ))}
+        </div>
+      )}
+
+      {/* Berechnungsformel + aktuelle Termine/Status */}
+      {(formula || callDate || budgetCfg) && (
+        <div className="mt-2 ml-7 flex flex-wrap gap-1.5 items-center">
+          {formula && eligible && (
+            <span className="text-[10px] bg-blue-50 text-blue-700 border border-blue-100 rounded px-1.5 py-0.5 font-mono">
+              {formula}
+            </span>
+          )}
+          {callDate && (
+            <span className="text-[10px] bg-indigo-50 text-indigo-700 border border-indigo-100 rounded px-1.5 py-0.5">
+              📅 Call: {callDate}
+            </span>
+          )}
+          {budgetCfg && (
+            <span className={`text-[10px] rounded px-1.5 py-0.5 font-semibold ${budgetCfg.color}`}>
+              {budgetCfg.label}
+            </span>
+          )}
+          {f.deadline_aktuell && (
+            <span className="text-[10px] bg-orange-50 text-orange-700 border border-orange-100 rounded px-1.5 py-0.5">
+              ⏰ {f.deadline_aktuell}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Voraussetzungen */}
+      {f.voraussetzungen && (
+        <div className="mt-2 ml-7 bg-amber-50 border border-amber-100 rounded p-2">
+          <p className="text-[10px] font-bold text-amber-900 uppercase tracking-wider mb-0.5">Voraussetzungen</p>
+          <p className="text-[11px] text-amber-900 whitespace-pre-line leading-relaxed">{f.voraussetzungen}</p>
+        </div>
+      )}
+
+      {/* Details-Expander für Antragsablauf etc. */}
+      {(f.antragsablauf || f.antragstelle || f.bearbeitungsdauer || f.auszahlungsmodus || f.hinweis) && (
+        <div className="mt-2 ml-7">
+          <button
+            type="button"
+            onClick={() => setShowDetails(s => !s)}
+            className="text-[10px] text-primary font-semibold hover:underline"
+          >
+            {showDetails ? '▴ Weniger Details' : '▾ Antrag, Bearbeitung & Tipps'}
+          </button>
+          {showDetails && (
+            <div className="mt-1.5 space-y-1.5 text-[11px] text-gray-700">
+              {f.antragsablauf && (
+                <DetailRow title="Antragsablauf" text={f.antragsablauf} />
+              )}
+              {f.antragstelle && (
+                <DetailRow title="Antragstelle" text={f.antragstelle + (f.link ? ' · ' + f.link : '')} />
+              )}
+              {(f.bearbeitungsdauer || f.auszahlungsmodus) && (
+                <DetailRow title="Bearbeitung & Auszahlung" text={[f.bearbeitungsdauer, f.auszahlungsmodus].filter(Boolean).join(' · ')} />
+              )}
+              {f.hinweis && (
+                <DetailRow title="Tipp" text={f.hinweis} />
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function DetailRow({ title, text }) {
+  return (
+    <div>
+      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{title}: </span>
+      <span className="text-[11px] text-gray-700 whitespace-pre-line">{text}</span>
     </div>
   )
 }

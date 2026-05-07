@@ -96,6 +96,79 @@ export function calcFoerderung(foerderung, ctx) {
  * @param {Array<{id:string, name:string, excludes?:string[]}>} selected
  * @returns {Array<{a: object, b: object}>} Liste der Konfliktpaare (eindeutig)
  */
+/**
+ * Sammelt für eine Förderung alle Gründe, warum sie greift oder NICHT greift.
+ * Wird im Editor angezeigt, damit der Bauleiter sofort sieht, warum eine
+ * Förderung in seiner Konfiguration anwendbar (oder eben nicht) ist.
+ *
+ * Rückgabe:
+ *   { eligible: bool, reasons: string[], blockers: string[] }
+ */
+export function eligibilityCheck(foerderung, ctx) {
+  const { kwp = 0, speicher_kwh = 0, hat_wallbox = false, hat_heizstab = false } = ctx
+  const reasons = []
+  const blockers = []
+
+  const kwpStr = kwp ? kwp.toLocaleString('de-AT', { maximumFractionDigits: 2 }) + ' kWp' : '–'
+  const kwhStr = speicher_kwh ? speicher_kwh.toLocaleString('de-AT', { maximumFractionDigits: 2 }) + ' kWh' : '–'
+
+  if (foerderung.kategorie === 'wallbox') {
+    if (hat_wallbox) reasons.push('Wallbox im Angebot enthalten')
+    else blockers.push('Wallbox ist nicht im Angebot')
+  }
+  if (foerderung.kategorie === 'heizstab') {
+    if (hat_heizstab) reasons.push('PV-Heizstab im Angebot enthalten')
+    else blockers.push('PV-Heizstab ist nicht im Angebot')
+  }
+  if (foerderung.kategorie === 'speicher') {
+    if (speicher_kwh > 0) reasons.push(`${kwhStr} Speicher im Angebot`)
+    else blockers.push('Kein Energiespeicher im Angebot')
+  }
+  if (foerderung.min_anlage_kwp) {
+    const min = Number(foerderung.min_anlage_kwp)
+    if (kwp >= min) reasons.push(`Anlage ${kwpStr} ≥ Mindestgröße ${min} kWp`)
+    else blockers.push(`Anlage ${kwpStr} unter Mindestgröße ${min} kWp`)
+  }
+  if (foerderung.max_anlage_kwp) {
+    const max = Number(foerderung.max_anlage_kwp)
+    if (kwp <= max) reasons.push(`Anlage ${kwpStr} ≤ Höchstgröße ${max} kWp`)
+    else blockers.push(`Anlage ${kwpStr} über Höchstgröße ${max} kWp`)
+  }
+
+  return { eligible: blockers.length === 0, reasons, blockers }
+}
+
+/**
+ * Liefert Betrag + menschenlesbare Berechnungsformel ("150 €/kWp × 7,6 kWp").
+ * Wird im Editor unter dem Förderbetrag eingeblendet.
+ */
+export function calcExplained(foerderung, ctx) {
+  const { kwp = 0, speicher_kwh = 0, netto = 0 } = ctx
+  const betrag = calcFoerderung(foerderung, ctx)
+  const f = (n, frac = 0) => Number(n).toLocaleString('de-AT', { maximumFractionDigits: frac })
+  let formula = ''
+  switch (foerderung.abrechnungsart) {
+    case 'pro_kwp':
+      formula = `${f(foerderung.betrag, 2)} €/kWp × ${f(kwp, 2)} kWp`
+      break
+    case 'pro_kwh':
+      formula = `${f(foerderung.betrag, 2)} €/kWh × ${f(speicher_kwh, 2)} kWh`
+      break
+    case 'pauschal':
+      formula = `Pauschalbetrag ${f(foerderung.betrag, 2)} €`
+      break
+    case 'prozent':
+      formula = `${f(foerderung.betrag, 2)} % von Netto ${f(netto, 2)} €`
+      break
+    default:
+      formula = ''
+  }
+  if (foerderung.max_betrag && betrag === Number(foerderung.max_betrag)) {
+    formula += ` (Deckel ${f(foerderung.max_betrag, 0)} €)`
+  }
+  return { betrag, formula }
+}
+
 export function detectFoerderungConflicts(selected) {
   const conflicts = []
   for (let i = 0; i < selected.length; i++) {
