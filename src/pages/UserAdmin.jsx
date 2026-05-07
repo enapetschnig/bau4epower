@@ -14,6 +14,7 @@ import {
 } from '../lib/userAdmin.js'
 import { GEWERKE, gewerkKurz } from '../lib/projectRecords.js'
 import { supabase } from '../lib/supabase.js'
+import { normalizePhone } from '../lib/phone.js'
 import PageHeader from '../components/Layout/PageHeader.jsx'
 
 const GEWERK_ICONS = {
@@ -107,12 +108,11 @@ export default function UserAdmin() {
               {pendingInvitations.length} offene Einladung{pendingInvitations.length !== 1 ? 'en' : ''}
             </p>
             <div className="space-y-1">
-              {pendingInvitations.slice(0, 3).map(i => (
+              {pendingInvitations.slice(0, 5).map(i => (
                 <div key={i.id} className="flex items-center justify-between text-[11px] text-blue-800">
                   <div className="flex items-center gap-2">
-                    {i.phone && <Phone size={11} />}
-                    <span>{i.vorname} {i.nachname}</span>
-                    <span className="text-blue-600">· {i.phone || i.email}</span>
+                    <Phone size={11} />
+                    <span className="font-mono">{i.phone || i.email || '–'}</span>
                     <span className="text-[9px] bg-white text-blue-700 px-1.5 py-px rounded uppercase">
                       {i.status}
                     </span>
@@ -565,37 +565,41 @@ function UserEditDialog({ user, onClose, onSaved }) {
 
 function InviteDialog({ onClose, onSent }) {
   const { showToast } = useToast()
-  const [form, setForm] = useState({
-    vorname: '',
-    nachname: '',
-    phone: '',
-    default_gewerk: 'elektro',
-    role: 'mitarbeiter',
-  })
+  const [phone, setPhone] = useState('')
   const [sending, setSending] = useState(false)
   const [link, setLink] = useState(null)
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!form.vorname.trim() || !form.phone.trim()) {
-      showToast('Bitte Vorname und Telefonnummer angeben', 'error')
+    const normalized = normalizePhone(phone)
+    if (!normalized) {
+      showToast('Bitte eine Telefonnummer angeben', 'error')
       return
     }
     setSending(true)
     try {
-      // 1. Code generieren
+      // 1. Doppel-Einladung verhindern
+      const { data: existing } = await supabase
+        .from('employee_invitations')
+        .select('id')
+        .eq('phone', normalized)
+        .in('status', ['pending', 'sent'])
+        .maybeSingle()
+      if (existing) {
+        showToast('Für diese Nummer existiert bereits eine offene Einladung', 'error')
+        setSending(false)
+        return
+      }
+
+      // 2. Code generieren
       const code = generateCode()
 
-      // 2. Invitation in DB anlegen
+      // 3. Invitation in DB anlegen (ohne Name/Gewerk – kommt später beim Freischalten)
       const { data: inv, error: insertErr } = await supabase
         .from('employee_invitations')
         .insert({
           code,
-          phone: form.phone.trim(),
-          vorname: form.vorname.trim(),
-          nachname: form.nachname.trim(),
-          default_gewerk: form.default_gewerk,
-          role: form.role,
+          phone: normalized,
           status: 'pending',
           invited_by: (await supabase.auth.getUser()).data.user?.id,
         })
@@ -604,7 +608,7 @@ function InviteDialog({ onClose, onSent }) {
 
       if (insertErr) throw insertErr
 
-      // 3. SMS via Vercel-API senden
+      // 4. SMS via Vercel-API senden
       const { data: { session } } = await supabase.auth.getSession()
       const userToken = session?.access_token || ''
 
@@ -616,8 +620,7 @@ function InviteDialog({ onClose, onSent }) {
         },
         body: JSON.stringify({
           invitationId: inv.id,
-          phone: form.phone.trim(),
-          vorname: form.vorname.trim(),
+          phone: normalized,
           code,
         }),
       })
@@ -660,7 +663,7 @@ function InviteDialog({ onClose, onSent }) {
             </div>
             <h2 className="text-base font-bold text-secondary mb-1">Einladung erstellt</h2>
             <p className="text-[12px] text-gray-500 mb-4">
-              {form.vorname} kann sich nun über den Link registrieren.
+              SMS verschickt. Der Mitarbeiter kann sich nun über den Link registrieren.
             </p>
             <div className="bg-gray-50 rounded-lg p-3 text-left">
               <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Registrierungs-Link</p>
@@ -692,79 +695,21 @@ function InviteDialog({ onClose, onSent }) {
         </div>
 
         <p className="text-[11px] text-gray-500 mb-4">
-          Der eingeladene Mitarbeiter bekommt eine SMS mit einem Link, um sich zu registrieren.
-          Sein Account ist sofort aktiv (kein zusätzliches Freischalten nötig).
+          Der Mitarbeiter bekommt eine SMS mit dem Registrierungs-Link.
+          Name, Gewerk und Rolle pflegst du <strong>nach</strong> der Selbst-Registrierung
+          beim Freischalten.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="label block mb-0.5">Vorname *</label>
-              <input required value={form.vorname}
-                onChange={e => setForm({ ...form, vorname: e.target.value })}
-                className="input-field" placeholder="Max" />
-            </div>
-            <div>
-              <label className="label block mb-0.5">Nachname</label>
-              <input value={form.nachname}
-                onChange={e => setForm({ ...form, nachname: e.target.value })}
-                className="input-field" placeholder="Mustermann" />
-            </div>
-          </div>
-
           <div>
             <label className="label block mb-0.5">Telefonnummer *</label>
             <div className="relative">
               <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
-              <input required type="tel" value={form.phone}
-                onChange={e => setForm({ ...form, phone: e.target.value })}
+              <input required type="tel" value={phone} autoFocus
+                onChange={e => setPhone(e.target.value)}
                 className="input-field pl-9" placeholder="+43 664 1234567" />
             </div>
-            <p className="text-[10px] text-gray-400 mt-1">Format: +43 oder 0664... – wird automatisch normalisiert</p>
-          </div>
-
-          <div>
-            <label className="label block mb-1">Standard-Gewerk</label>
-            <div className="grid grid-cols-3 gap-2">
-              {GEWERKE.map(g => {
-                const cfg = GEWERK_ICONS[g.v]
-                const active = form.default_gewerk === g.v
-                return (
-                  <button
-                    key={g.v}
-                    type="button"
-                    onClick={() => setForm({ ...form, default_gewerk: g.v })}
-                    className={`flex flex-col items-center gap-1 py-2 rounded-lg border-2 transition-all
-                      ${active ? `${cfg.bg} border-current ${cfg.color}` : 'border-gray-200 bg-white text-gray-400'}`}
-                  >
-                    <cfg.Icon size={14} weight="fill" className={active ? cfg.color : 'text-gray-300'} />
-                    <span className="text-[10px] font-semibold">{g.kurz}</span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          <div>
-            <label className="label block mb-1">Rolle</label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setForm({ ...form, role: 'mitarbeiter' })}
-                className={`py-2.5 rounded-lg text-[12px] font-semibold transition-all
-                  ${form.role === 'mitarbeiter' ? 'bg-primary-50 border-2 border-primary text-primary' : 'bg-white border-2 border-gray-200 text-gray-400'}`}
-              >
-                Mitarbeiter
-              </button>
-              <button
-                type="button"
-                onClick={() => setForm({ ...form, role: 'administrator' })}
-                className={`py-2.5 rounded-lg text-[12px] font-semibold transition-all
-                  ${form.role === 'administrator' ? 'bg-rose-50 border-2 border-rose-500 text-rose-600' : 'bg-white border-2 border-gray-200 text-gray-400'}`}
-              >
-                Administrator
-              </button>
-            </div>
+            <p className="text-[10px] text-gray-400 mt-1">Format: +43 oder 0664… – wird automatisch normalisiert</p>
           </div>
 
           <button type="submit" disabled={sending} className="btn-primary w-full mt-3">

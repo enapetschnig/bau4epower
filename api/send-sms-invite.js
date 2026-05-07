@@ -93,7 +93,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Nicht angemeldet' })
     }
 
-    const { invitationId, phone, vorname, code } = req.body || {}
+    const { invitationId, phone, code } = req.body || {}
     if (!invitationId || !phone || !code) {
       return res.status(400).json({ error: 'invitationId, phone und code erforderlich' })
     }
@@ -129,8 +129,7 @@ export default async function handler(req, res) {
 
     const toPhone = normalizePhone(phone)
     const registerUrl = `${appUrl}/register?code=${code}`
-    const greeting = vorname ? `Hallo ${vorname}!` : 'Hallo!'
-    const smsText = `${greeting} Das ist unsere neue ET-König-App. Bitte registriere dich hier: ${registerUrl}`
+    const smsText = `ET-König GmbH - Chris: Das ist unsere neue ET-König App. Bitte registriere dich hier: ${registerUrl}`
 
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`
     const auth = Buffer.from(`${accountSid}:${authToken}`).toString('base64')

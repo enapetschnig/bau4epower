@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { SpinnerGap, EnvelopeSimple, Lock } from '@phosphor-icons/react'
+import { Link } from 'react-router-dom'
+import { SpinnerGap, Phone, Lock } from '@phosphor-icons/react'
 import { useAuth } from '../contexts/AuthContext.jsx'
+import { loginIdentifierToEmail } from '../lib/phone.js'
 import Logo from '../components/Logo.jsx'
 
 export default function Login() {
-  const [email, setEmail] = useState('')
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -15,6 +17,11 @@ export default function Login() {
     setError('')
     setLoading(true)
     try {
+      const email = loginIdentifierToEmail(identifier)
+      if (!email) {
+        setError('Bitte Telefonnummer oder E-Mail angeben')
+        return
+      }
       await signIn(email, password)
     } catch (err) {
       setError(err.message || 'Anmeldung fehlgeschlagen')
@@ -37,21 +44,22 @@ export default function Login() {
           style={{ boxShadow: '0 4px 16px rgba(246,135,20,0.08)' }}>
 
           <h1 className="text-base font-bold text-secondary mb-1">Willkommen zurück</h1>
-          <p className="text-[12px] text-gray-400 mb-5">Melde dich mit deinen Zugangsdaten an</p>
+          <p className="text-[12px] text-gray-400 mb-5">Mit Telefonnummer oder E-Mail anmelden</p>
 
           <form onSubmit={handleSubmit} className="space-y-3">
             <div>
-              <label className="label block mb-1">E-Mail</label>
+              <label className="label block mb-1">Telefonnummer oder E-Mail</label>
               <div className="relative">
-                <EnvelopeSimple size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
+                <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
                 <input
-                  type="email"
+                  type="text"
                   className="input-field pl-9"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="name@et-koenig.at"
+                  value={identifier}
+                  onChange={e => setIdentifier(e.target.value)}
+                  placeholder="0664 1234567"
                   required
-                  autoComplete="email"
+                  autoComplete="username"
+                  inputMode="tel"
                 />
               </div>
             </div>
@@ -87,6 +95,13 @@ export default function Login() {
               ) : 'Anmelden'}
             </button>
           </form>
+
+          <p className="text-center text-[11px] text-gray-400 mt-4">
+            Noch keinen Account?{' '}
+            <Link to="/register" className="text-primary font-medium hover:underline">
+              Registrieren
+            </Link>
+          </p>
         </div>
 
         <p className="text-center text-[10px] text-gray-300 tracking-wide mt-6">

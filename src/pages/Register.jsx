@@ -1,16 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
-import { SpinnerGap, EnvelopeSimple, Lock, Phone, User, CheckCircle, Warning, Lightning, SunHorizon, Wrench } from '@phosphor-icons/react'
+import { SpinnerGap, Lock, Phone, CheckCircle, Warning } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import Logo from '../components/Logo.jsx'
-import { GEWERKE } from '../lib/projectRecords.js'
-import { normalizePhone } from '../lib/phone.js'
-
-const GEWERK_ICONS = {
-  elektro: { Icon: Lightning, color: 'text-amber-600', bg: 'bg-amber-100' },
-  pv: { Icon: SunHorizon, color: 'text-emerald-600', bg: 'bg-emerald-100' },
-  installateur: { Icon: Wrench, color: 'text-blue-600', bg: 'bg-blue-100' },
-}
+import { normalizePhone, phoneToPseudoEmail } from '../lib/phone.js'
 
 export default function Register() {
   const [searchParams] = useSearchParams()
@@ -20,15 +13,9 @@ export default function Register() {
   const [invitation, setInvitation] = useState(null)
   const [loadingInvite, setLoadingInvite] = useState(!!code)
 
-  const [form, setForm] = useState({
-    vorname: '',
-    nachname: '',
-    email: '',
-    phone: '',
-    gewerk: 'elektro',
-    password: '',
-    passwordConfirm: '',
-  })
+  const [phone, setPhone] = useState('')
+  const [password, setPassword] = useState('')
+  const [passwordConfirm, setPasswordConfirm] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -54,16 +41,9 @@ export default function Register() {
         setInvitation(null)
       } else {
         setInvitation(data)
-        setForm(f => ({
-          ...f,
-          vorname: data.vorname || '',
-          nachname: data.nachname || '',
-          phone: data.phone || '',
-          email: data.email || '',
-          gewerk: data.default_gewerk || 'elektro',
-        }))
+        if (data.phone) setPhone(data.phone)
       }
-    } catch (err) {
+    } catch {
       setError('Fehler beim Laden der Einladung')
     } finally {
       setLoadingInvite(false)
@@ -74,56 +54,50 @@ export default function Register() {
     e.preventDefault()
     setError('')
 
-    if (!form.vorname.trim() || !form.nachname.trim()) {
-      setError('Bitte Vor- und Nachnamen angeben')
+    const normalizedPhone = normalizePhone(phone)
+    if (!normalizedPhone) {
+      setError('Bitte eine Telefonnummer angeben')
       return
     }
-    if (!form.email.trim()) {
-      setError('Bitte E-Mail-Adresse angeben')
-      return
-    }
-    if (form.password.length < 8) {
+    if (password.length < 8) {
       setError('Passwort muss mindestens 8 Zeichen haben')
       return
     }
-    if (form.password !== form.passwordConfirm) {
+    if (password !== passwordConfirm) {
       setError('Passwörter stimmen nicht überein')
       return
     }
 
     setSubmitting(true)
     try {
-      const normalizedPhone = normalizePhone(form.phone)
-
-      // Telefonnummer-Eindeutigkeit vorab prüfen, sodass der User eine
-      // saubere Fehlermeldung sieht, statt einer kryptischen DB-Constraint-
-      // Verletzung beim Trigger nach dem Auth-Signup.
-      if (normalizedPhone) {
-        const { data: phoneTaken } = await supabase.rpc('phone_already_registered', { p: normalizedPhone })
-        if (phoneTaken === true) {
-          setError('Diese Telefonnummer ist bereits registriert. Pro Person ist nur eine Registrierung möglich.')
-          setSubmitting(false)
-          return
-        }
+      // Telefonnummer-Eindeutigkeit vorab prüfen
+      const { data: phoneTaken } = await supabase.rpc('phone_already_registered', { p: normalizedPhone })
+      if (phoneTaken === true) {
+        setError('Diese Telefonnummer ist bereits registriert. Du kannst dich direkt anmelden.')
+        setSubmitting(false)
+        return
       }
 
+      // Pseudo-E-Mail für Supabase-Auth aus der Telefonnummer ableiten
+      const pseudoEmail = phoneToPseudoEmail(normalizedPhone)
+
       const { error: signupError } = await supabase.auth.signUp({
-        email: form.email.trim().toLowerCase(),
-        password: form.password,
+        email: pseudoEmail,
+        password,
         options: {
           data: {
-            vorname: form.vorname.trim(),
-            nachname: form.nachname.trim(),
             phone: normalizedPhone,
-            default_gewerk: form.gewerk,
             invite_code: code || null,
+            // Einladung trägt nur die Nummer; Vorname/Nachname/Gewerk
+            // pflegt der Admin nach der Selbst-Registrierung beim
+            // Freischalten in der Benutzer-Verwaltung.
           },
         },
       })
 
       if (signupError) {
         if (signupError.message.includes('already')) {
-          setError('Diese E-Mail-Adresse ist bereits registriert')
+          setError('Diese Telefonnummer ist bereits registriert. Du kannst dich direkt anmelden.')
         } else if (
           signupError.message.includes('phone') ||
           signupError.message.includes('profiles_phone_unique')
@@ -136,7 +110,6 @@ export default function Register() {
       }
 
       setSuccess(true)
-      // Nach 3 Sek zum Login
       setTimeout(() => navigate('/login'), 3000)
     } catch (err) {
       setError(err.message || 'Registrierung fehlgeschlagen')
@@ -174,9 +147,6 @@ export default function Register() {
     )
   }
 
-  const gewerkObj = GEWERKE.find(g => g.v === form.gewerk)
-  const gewerkCfg = GEWERK_ICONS[form.gewerk]
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 flex flex-col items-center justify-center px-6 py-10">
       <div className="w-full max-w-md">
@@ -212,97 +182,28 @@ export default function Register() {
           )}
 
           <h1 className="text-base font-bold text-secondary mb-1">Account erstellen</h1>
-          <p className="text-[12px] text-gray-400 mb-4">Bitte fülle alle Felder aus</p>
+          <p className="text-[12px] text-gray-400 mb-4">
+            Melde dich mit Telefonnummer und Passwort an
+          </p>
 
           <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="label block mb-1">Vorname *</label>
-                <input
-                  required
-                  value={form.vorname}
-                  onChange={e => setForm({ ...form, vorname: e.target.value })}
-                  className="input-field"
-                  placeholder="z.B. Max"
-                />
-              </div>
-              <div>
-                <label className="label block mb-1">Nachname *</label>
-                <input
-                  required
-                  value={form.nachname}
-                  onChange={e => setForm({ ...form, nachname: e.target.value })}
-                  className="input-field"
-                  placeholder="z.B. Mustermann"
-                />
-              </div>
-            </div>
-
             <div>
-              <label className="label block mb-1">E-Mail *</label>
-              <div className="relative">
-                <EnvelopeSimple size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
-                <input
-                  type="email"
-                  required
-                  value={form.email}
-                  onChange={e => setForm({ ...form, email: e.target.value })}
-                  className="input-field pl-9"
-                  placeholder="name@email.at"
-                  disabled={!!invitation?.email}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="label block mb-1">Telefon</label>
+              <label className="label block mb-1">Telefonnummer *</label>
               <div className="relative">
                 <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
                 <input
                   type="tel"
-                  value={form.phone}
-                  onChange={e => setForm({ ...form, phone: e.target.value })}
+                  required
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
                   className="input-field pl-9"
                   placeholder="+43 664 1234567"
+                  disabled={!!invitation?.phone}
+                  inputMode="tel"
                 />
               </div>
+              <p className="text-[10px] text-gray-400 mt-1">Format: +43 oder 0664… – wird automatisch normalisiert</p>
             </div>
-
-            {!invitation && (
-              <div>
-                <label className="label block mb-1">Gewerk</label>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {GEWERKE.map(g => {
-                    const cfg = GEWERK_ICONS[g.v]
-                    const active = form.gewerk === g.v
-                    return (
-                      <button
-                        key={g.v}
-                        type="button"
-                        onClick={() => setForm({ ...form, gewerk: g.v })}
-                        className={`flex flex-col items-center justify-center gap-1 py-2 rounded-lg border-2 transition-all
-                          ${active ? `${cfg.bg} border-current ${cfg.color}` : 'border-gray-200 bg-white text-gray-400'}`}
-                      >
-                        <cfg.Icon size={14} weight="fill" className={active ? cfg.color : 'text-gray-300'} />
-                        <span className="text-[10px] font-semibold">{g.kurz}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
-            {invitation && gewerkCfg && (
-              <div className="bg-gray-50 rounded-lg p-2.5 flex items-center gap-2">
-                <div className={`w-8 h-8 ${gewerkCfg.bg} rounded-md flex items-center justify-center`}>
-                  <gewerkCfg.Icon size={14} weight="fill" className={gewerkCfg.color} />
-                </div>
-                <div>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wider">Zugewiesenes Gewerk</p>
-                  <p className="text-[12px] font-semibold text-secondary">{gewerkObj?.l}</p>
-                </div>
-              </div>
-            )}
 
             <div>
               <label className="label block mb-1">Passwort * <span className="text-gray-300 normal-case font-normal">(min. 8 Zeichen)</span></label>
@@ -312,10 +213,11 @@ export default function Register() {
                   type="password"
                   required
                   minLength={8}
-                  value={form.password}
-                  onChange={e => setForm({ ...form, password: e.target.value })}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
                   className="input-field pl-9"
                   placeholder="••••••••"
+                  autoComplete="new-password"
                 />
               </div>
             </div>
@@ -327,10 +229,11 @@ export default function Register() {
                 <input
                   type="password"
                   required
-                  value={form.passwordConfirm}
-                  onChange={e => setForm({ ...form, passwordConfirm: e.target.value })}
+                  value={passwordConfirm}
+                  onChange={e => setPasswordConfirm(e.target.value)}
                   className="input-field pl-9"
                   placeholder="••••••••"
+                  autoComplete="new-password"
                 />
               </div>
             </div>
