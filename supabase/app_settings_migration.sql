@@ -47,5 +47,11 @@ INSERT INTO app_settings (key, value) VALUES
   ('TWILIO_ACCOUNT_SID',  ''),
   ('TWILIO_AUTH_TOKEN',   ''),
   ('TWILIO_PHONE_NUMBER', ''),
-  ('APP_URL',             'https://bau4epower.vercel.app')
+  ('APP_URL',             'https://bau4epower.vercel.app'),
+  ('SMTP_HOST',           ''),
+  ('SMTP_PORT',           '465'),
+  ('SMTP_SECURE',         'true'),
+  ('SMTP_USER',           ''),
+  ('SMTP_PASS',           ''),
+  ('SMTP_FROM',           '')
 ON CONFLICT (key) DO NOTHING;
