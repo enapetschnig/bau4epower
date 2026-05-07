@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
-import { SpinnerGap, Lock, Phone, CheckCircle, Warning } from '@phosphor-icons/react'
+import { SpinnerGap, Lock, Phone, User, CheckCircle, Warning } from '@phosphor-icons/react'
 import { supabase } from '../lib/supabase.js'
 import Logo from '../components/Logo.jsx'
 import { normalizePhone, phoneToPseudoEmail } from '../lib/phone.js'
@@ -13,6 +13,8 @@ export default function Register() {
   const [invitation, setInvitation] = useState(null)
   const [loadingInvite, setLoadingInvite] = useState(!!code)
 
+  const [vorname, setVorname] = useState('')
+  const [nachname, setNachname] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
@@ -42,6 +44,8 @@ export default function Register() {
       } else {
         setInvitation(data)
         if (data.phone) setPhone(data.phone)
+        if (data.vorname) setVorname(data.vorname)
+        if (data.nachname) setNachname(data.nachname)
       }
     } catch {
       setError('Fehler beim Laden der Einladung')
@@ -55,6 +59,10 @@ export default function Register() {
     setError('')
 
     const normalizedPhone = normalizePhone(phone)
+    if (!vorname.trim() || !nachname.trim()) {
+      setError('Bitte Vor- und Nachnamen angeben')
+      return
+    }
     if (!normalizedPhone) {
       setError('Bitte eine Telefonnummer angeben')
       return
@@ -86,11 +94,10 @@ export default function Register() {
         password,
         options: {
           data: {
+            vorname: vorname.trim(),
+            nachname: nachname.trim(),
             phone: normalizedPhone,
             invite_code: code || null,
-            // Einladung trägt nur die Nummer; Vorname/Nachname/Gewerk
-            // pflegt der Admin nach der Selbst-Registrierung beim
-            // Freischalten in der Benutzer-Verwaltung.
           },
         },
       })
@@ -164,7 +171,8 @@ export default function Register() {
               <div>
                 <p className="text-[12px] font-bold text-emerald-900">Einladung gefunden!</p>
                 <p className="text-[11px] text-emerald-800 mt-0.5">
-                  Du wurdest zur ET KÖNIG App eingeladen. Setze nur noch dein Passwort.
+                  Du wurdest zur ET KÖNIG App eingeladen. Trage deinen Namen
+                  und ein Passwort ein – dann ist dein Account sofort aktiv.
                 </p>
               </div>
             </div>
@@ -183,10 +191,38 @@ export default function Register() {
 
           <h1 className="text-base font-bold text-secondary mb-1">Account erstellen</h1>
           <p className="text-[12px] text-gray-400 mb-4">
-            Melde dich mit Telefonnummer und Passwort an
+            Bitte fülle alle Felder aus
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="label block mb-1">Vorname *</label>
+                <div className="relative">
+                  <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" />
+                  <input
+                    type="text" required
+                    value={vorname}
+                    onChange={e => setVorname(e.target.value)}
+                    className="input-field pl-9"
+                    placeholder="Max"
+                    autoComplete="given-name"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="label block mb-1">Nachname *</label>
+                <input
+                  type="text" required
+                  value={nachname}
+                  onChange={e => setNachname(e.target.value)}
+                  className="input-field"
+                  placeholder="Mustermann"
+                  autoComplete="family-name"
+                />
+              </div>
+            </div>
+
             <div>
               <label className="label block mb-1">Telefonnummer *</label>
               <div className="relative">
@@ -200,6 +236,7 @@ export default function Register() {
                   placeholder="+43 664 1234567"
                   disabled={!!invitation?.phone}
                   inputMode="tel"
+                  autoComplete="tel"
                 />
               </div>
               <p className="text-[10px] text-gray-400 mt-1">Format: +43 oder 0664… – wird automatisch normalisiert</p>
