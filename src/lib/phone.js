@@ -15,20 +15,30 @@ export function normalizePhone(phone) {
   return p
 }
 
+// Domain für die intern erzeugten Pseudo-E-Mails der Phone-Logins.
+// Subdomain einer von uns kontrollierten Domain, ohne MX-Eintrag → niemals
+// zustellbar. Supabase Auth lehnt reservierte Pseudo-TLDs wie ".local"
+// als "email_address_invalid" ab; eine echte Domain unter unserer
+// Kontrolle akzeptiert es problemlos.
+export const PHONE_EMAIL_DOMAIN = 'phone.bau4epower.app'
+
 /**
- * Erzeugt aus einer Telefonnummer eine deterministische Pseudo-E-Mail-
- * Adresse, mit der Supabase Auth (das eine E-Mail braucht) intern arbeitet.
+ * Erzeugt aus einer Telefonnummer eine deterministische Pseudo-E-Mail.
  *
- * Beispiel: "0664 1234567" → "+436641234567" → "436641234567@phone.local"
- *
- * .local ist eine reservierte Pseudo-TLD; die Adresse ist syntaktisch
- * gültig, aber niemals zustellbar – der Mitarbeiter sieht sie nie.
+ * Beispiel: "0664 1234567" → "+436641234567" → "436641234567@phone.bau4epower.app"
  */
 export function phoneToPseudoEmail(phone) {
   const norm = normalizePhone(phone)
   if (!norm) return ''
   const digits = norm.replace(/\D/g, '')
-  return `${digits}@phone.local`
+  return `${digits}@${PHONE_EMAIL_DOMAIN}`
+}
+
+/**
+ * Prüft, ob eine Adresse eine intern erzeugte Phone-Pseudo-Mail ist.
+ */
+export function isPhonePseudoEmail(email) {
+  return typeof email === 'string' && email.endsWith('@' + PHONE_EMAIL_DOMAIN)
 }
 
 /**

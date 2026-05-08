@@ -37,8 +37,9 @@ BEGIN
   END IF;
 
   -- profiles.email hat NOT NULL – wir schreiben die volle E-Mail rein
-  -- (Pseudo-Mails `*@phone.local` ebenfalls; sie sind syntaktisch gültig
-  --  und werden im UI nicht angezeigt, sondern nur intern für Auth genutzt).
+  -- (Pseudo-Mails `*@phone.bau4epower.app` ebenfalls; sie sind syntaktisch
+  --  gültig und werden im UI nicht angezeigt, sondern nur intern für
+  --  Supabase Auth genutzt).
   INSERT INTO public.profiles (
     id, email, vorname, nachname, phone,
     default_gewerk, registered_via, is_active

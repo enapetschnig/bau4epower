@@ -103,12 +103,16 @@ export default function Register() {
       })
 
       if (signupError) {
-        if (signupError.message.includes('already')) {
+        // Supabase liefert error.code ('user_already_exists',
+        // 'email_address_invalid', 'weak_password' …). Wir matchen
+        // gezielt darauf, statt Substring-Treffer zu nutzen –
+        // sonst fängt z.B. der Substring 'phone' aus einer
+        // Domain-Fehlermeldung den falschen Zweig.
+        const code = signupError.code || ''
+        if (code === 'user_already_exists' ||
+            signupError.message.toLowerCase().includes('already registered')) {
           setError('Diese Telefonnummer ist bereits registriert. Du kannst dich direkt anmelden.')
-        } else if (
-          signupError.message.includes('phone') ||
-          signupError.message.includes('profiles_phone_unique')
-        ) {
+        } else if (signupError.message.includes('profiles_phone_unique')) {
           setError('Diese Telefonnummer ist bereits registriert.')
         } else {
           setError(signupError.message)
